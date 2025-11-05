@@ -1,0 +1,362 @@
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --light: #f9fafb;
+    --dark: #1f2937;
+    --muted: #94a3b8;
+    --border: #374151;
+    --light-square: #f0d9b5;
+    --dark-square: #b58863;
+    --card-bg: rgba(255, 255, 255, 0.04);
+    --board-max: 720px;
+}
+
+/* Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0
+}
+
+html,
+body {
+    height: 100%
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0f1724 0%, #111827 100%);
+    color: var(--light);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Header */
+header {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    background: rgba(17, 24, 39, 0.65);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    z-index: 50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: .6rem
+}
+
+.logo-icon {
+    font-size: 1.6rem
+}
+
+.logo h1 {
+    background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.nav {
+    color: var(--light);
+    text-decoration: none;
+    opacity: .9
+}
+
+/* Main layout */
+main {
+    margin-top: 72px;
+    padding-bottom: 48px
+}
+
+.stage {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 18px;
+    color: var(--muted);
+    text-decoration: none
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 20px
+}
+
+.game-header h2 {
+    font-size: 2.4rem;
+    background: linear-gradient(135deg, var(--light) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.game-header p {
+    color: var(--muted);
+    max-width: 680px;
+    margin: 0 auto;
+    font-size: 1rem
+}
+
+/* Chess container */
+.chess-container {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    justify-content: center;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Left panel */
+.game-panel {
+    flex: 1;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px
+}
+
+.game-info {
+    background: var(--card-bg);
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border)
+}
+
+.status {
+    font-weight: 700;
+    padding: 10px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.08), transparent);
+    text-align: center
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px
+}
+
+.control-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap
+}
+
+.btn {
+    background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35)
+}
+
+.btn.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--light)
+}
+
+.fullscreen-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer
+}
+
+/* Moves and data */
+.moves-panel,
+.game-data {
+    background: var(--card-bg);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border)
+}
+
+.moves {
+    max-height: 260px;
+    overflow: auto;
+    padding: 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.02)
+}
+
+.data-item {
+    font-size: .9rem;
+    color: var(--muted);
+    margin-bottom: 8px
+}
+
+.select {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 8px;
+    color: var(--light);
+    width: 100%
+}
+
+/* Board container & board */
+.board-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px
+}
+
+.board {
+    width: min(92vmin, var(--board-max));
+    height: min(92vmin, var(--board-max));
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(180deg, #bdb5a6, #e9dfcc);
+    --square-size: calc(min(92vmin, var(--board-max)) / 8);
+}
+
+.square {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    cursor: pointer;
+    transition: all .12s ease;
+    position: relative;
+    font-size: calc(var(--square-size) * 0.62);
+}
+
+.square.light {
+    background: var(--light-square)
+}
+
+.square.dark {
+    background: var(--dark-square)
+}
+
+.square.selected {
+    box-shadow: inset 0 0 0 6px rgba(74, 144, 226, 0.12)
+}
+
+.square.highlight {
+    outline: 4px solid rgba(74, 144, 226, 0.5);
+    box-sizing: border-box
+}
+
+.piece {
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: inherit;
+    line-height: 1;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35))
+}
+
+.piece.white {
+    color: #fff;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6)
+}
+
+.piece.black {
+    color: #111;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6)
+}
+
+/* Small screens */
+@media (max-width:1024px) {
+    .chess-container {
+        flex-direction: column;
+        align-items: center
+    }
+
+    .game-panel {
+        max-width: 100%;
+        width: 100%
+    }
+
+    .board {
+        width: min(92vmin, 600px);
+        height: min(92vmin, 600px)
+    }
+}
+
+@media (max-width:480px) {
+    header {
+        padding: 10px;
+        flex-direction: row;
+        gap: .5rem
+    }
+
+    .game-header h2 {
+        font-size: 1.8rem
+    }
+
+    .game-header p {
+        font-size: .95rem
+    }
+
+    .board {
+        width: 95vw;
+        height: 95vw
+    }
+
+    .moves {
+        max-height: 180px
+    }
+
+    .data-item {
+        font-size: .82rem
+    }
+}
+
+/* Fullscreen styling for .chess-container when in fullscreen */
+.chess-container:fullscreen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px
+}
+
+.chess-container:fullscreen .board {
+    width: min(80vh, 80vw);
+    height: min(80vh, 80vw);
+    max-width: 800px;
+    max-height: 800px
+}
+
+/* scrollbars */
+::-webkit-scrollbar {
+    width: 8px
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 6px
+}

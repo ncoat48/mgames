@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .back-btn-2 {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #4a90e2;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: Arial, sans-serif;
+        }
+
+        .back-btn-2:hover {
+            background: #357ae8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            background-color: #000;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            display: block;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            width: 250px;
+            height: 250px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background: rgba(255, 204, 0, 0.2);
+            border: 2px solid #ffcc00;
+            border-radius: 50%;
+            color: #ffcc00;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .control-btn:active {
+            background: rgba(255, 204, 0, 0.5);
+            transform: scale(0.95);
+        }
+
+        .up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .down {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .speed-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .speed-label {
+            margin-right: 10px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .speed-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555;
+            color: #fff;
+            padding: 5px 10px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .speed-btn.active {
+            background: #ffcc00;
+            color: #000;
+            border-color: #ffcc00;
+        }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h2 {
+            color: #ffcc00;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .instructions p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .btn {
+            background: #ffcc00;
+            color: #1a1a2e;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.3);
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #ffd84d;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 204, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .game-over h2 {
+            color: #ffcc00;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .game-over p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .mobile-controls {
+                display: grid;
+            }
+
+            .instructions {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat-item {
+                flex-direction: row;
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .mobile-controls {
+                width: 200px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>PAC-MAN</h1>
+            <p class="subtitle">Classic arcade game - Play on PC or Mobile!</p>
+        </header>
+        <a href="../index.html" class="back-btn-2">← Back</a>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">SCORE</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">LIVES</span>
+                <span class="stat-value" id="lives">3</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">LEVEL</span>
+                <span class="stat-value" id="level">1</span>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+            <div class="game-over" id="gameOver">
+                <h2>GAME OVER</h2>
+                <p>Your score: <span id="finalScore">0</span></p>
+                <button class="btn" id="restartBtn">PLAY AGAIN</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn">START GAME</button>
+
+            <div class="speed-controls">
+                <span class="speed-label">SPEED:</span>
+                <button class="speed-btn active" id="slowBtn">SLOW</button>
+                <button class="speed-btn" id="mediumBtn">MEDIUM</button>
+                <button class="speed-btn" id="fastBtn">FAST</button>
+            </div>
+
+            <div class="mobile-controls">
+                <div class="control-btn up" id="upBtn">↑</div>
+                <div class="control-btn left" id="leftBtn">←</div>
+                <div class="control-btn right" id="rightBtn">→</div>
+                <div class="control-btn down" id="downBtn">↓</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>How to Play</h2>
+            <p>Guide Pac-Man through the maze to eat all the dots while avoiding the ghosts!</p>
+            <ul>
+                <li><strong>PC:</strong> Use arrow keys to move</li>
+                <li><strong>Mobile:</strong> Use the directional buttons</li>
+                <li>Eat power pellets to temporarily turn the tables on the ghosts</li>
+                <li>Clear all dots to advance to the next level</li>
+                <li>Adjust game speed using the speed controls</li>
+            </ul>
+            <p>Good luck and have fun!</p>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const levelElement = document.getElementById('level');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const gameOverScreen = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+
+        // Speed controls
+        const slowBtn = document.getElementById('slowBtn');
+        const mediumBtn = document.getElementById('mediumBtn');
+        const fastBtn = document.getElementById('fastBtn');
+
+        // Mobile controls
+        const upBtn = document.getElementById('upBtn');
+        const downBtn = document.getElementById('downBtn');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+
+        // Game state
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameRunning = false;
+        let gameLoop;
+        let gameSpeed = 10; // Default to medium speed
+
+        // Maze configuration
+        const gridSize = 20;
+        const rows = canvas.height / gridSize;
+        const cols = canvas.width / gridSize;
+
+        // Create a simple maze (1 = wall, 0 = dot, 2 = power pellet)
+        let maze = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        // Add some power pellets
+        maze[1][1] = 2;
+        maze[1][28] = 2;
+        maze[17][1] = 2;
+        maze[17][28] = 2;
+
+        // Pac-Man properties
+        let pacman = {
+            x: 1,
+            y: 1,
+            direction: 'right',
+            nextDirection: 'right',
+            mouthOpen: 0,
+            mouthSpeed: 0.2,
+            mouthAngle: 0.4,
+            moveCounter: 0
+        };
+
+        // Ghost properties
+        let ghosts = [
+            { x: 14, y: 10, color: '#FF0000', direction: 'up', speed: 2, moveCounter: 0 },
+            { x: 15, y: 10, color: '#FFB8FF', direction: 'down', speed: 2, moveCounter: 0 },
+            { x: 13, y: 10, color: '#00FFFF', direction: 'left', speed: 2, moveCounter: 0 },
+            { x: 16, y: 10, color: '#FFB852', direction: 'right', speed: 2, moveCounter: 0 }
+        ];
+
+        // Power mode
+        let powerMode = false;
+        let powerModeTimer = 0;
+        const POWER_MODE_DURATION = 300; // frames
+
+        // Dots
+        let dots = [];
+        let totalDots = 0;
+
+        // Initialize dots based on maze
+        function initDots() {
+            dots = [];
+            totalDots = 0;
+
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === 0 || maze[y][x] === 2) {
+                        dots.push({ x, y, isPower: maze[y][x] === 2 });
+                        totalDots++;
+                    }
+                }
+            }
+        }
+
+        // Draw the maze
+        function drawMaze() {
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    const cell = maze[y][x];
+
+                    if (cell === 1) {
+                        ctx.fillStyle = '#1a1a2e';
+                        ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
+
+                        ctx.fillStyle = '#0f3460';
+                        ctx.fillRect(x * gridSize + 2, y * gridSize + 2, gridSize - 4, gridSize - 4);
+                    }
+                }
+            }
+        }
+
+        // Draw dots
+        function drawDots() {
+            ctx.fillStyle = '#ffcc00';
+
+            for (const dot of dots) {
+                const radius = dot.isPower ? 6 : 3;
+                ctx.beginPath();
+                ctx.arc(
+                    dot.x * gridSize + gridSize / 2,
+                    dot.y * gridSize + gridSize / 2,
+                    radius,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+
+        // Draw Pac-Man
+        function drawPacman() {
+            ctx.save();
+            ctx.translate(
+                pacman.x * gridSize + gridSize / 2,
+                pacman.y * gridSize + gridSize / 2
+            );
+
+            // Rotate based on direction
+            switch (pacman.direction) {
+                case 'right': ctx.rotate(0); break;
+                case 'down': ctx.rotate(Math.PI / 2); break;
+                case 'left': ctx.rotate(Math.PI); break;
+                case 'up': ctx.rotate(-Math.PI / 2); break;
+            }
+
+            // Animate mouth
+            pacman.mouthOpen += pacman.mouthSpeed;
+            if (pacman.mouthOpen > 1 || pacman.mouthOpen < 0) {
+                pacman.mouthSpeed = -pacman.mouthSpeed;
+            }
+
+            const angle = pacman.mouthAngle * pacman.mouthOpen;
+
+            // Draw Pac-Man
+            ctx.fillStyle = '#ffcc00';
+            ctx.beginPath();
+            ctx.arc(0, 0, gridSize / 2 - 2, angle, Math.PI * 2 - angle);
+            ctx.lineTo(0, 0);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Draw ghosts
+        function drawGhosts() {
+            for (const ghost of ghosts) {
+                ctx.save();
+                ctx.translate(
+                    ghost.x * gridSize + gridSize / 2,
+                    ghost.y * gridSize + gridSize / 2
+                );
+
+                // Ghost body
+                ctx.fillStyle = powerMode ? '#0000FF' : ghost.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, gridSize / 2 - 2, Math.PI, 0, false);
+                ctx.lineTo(gridSize / 2 - 2, 0);
+                ctx.lineTo(gridSize / 2 - 2, gridSize / 2 - 2);
+                ctx.lineTo(-(gridSize / 2 - 2), gridSize / 2 - 2);
+                ctx.lineTo(-(gridSize / 2 - 2), 0);
+                ctx.fill();
+
+                // Ghost eyes
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(-5, -3, 4, 0, Math.PI * 2);
+                ctx.arc(5, -3, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ghost pupils
+                ctx.fillStyle = '#0000AA';
+                ctx.beginPath();
+
+                // Direction-based pupil position
+                let leftPupilX = -5;
+                let rightPupilX = 5;
+                let pupilY = -3;
+
+                switch (ghost.direction) {
+                    case 'left':
+                        leftPupilX -= 2;
+                        rightPupilX -= 2;
+                        break;
+                    case 'right':
+                        leftPupilX += 2;
+                        rightPupilX += 2;
+                        break;
+                    case 'up':
+                        pupilY -= 2;
+                        break;
+                    case 'down':
+                        pupilY += 2;
+                        break;
+                }
+
+                ctx.arc(leftPupilX, pupilY, 2, 0, Math.PI * 2);
+                ctx.arc(rightPupilX, pupilY, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // Move Pac-Man
+        function movePacman() {
+            pacman.moveCounter++;
+
+            // Only move when counter reaches the game speed threshold
+            if (pacman.moveCounter >= gameSpeed) {
+                pacman.moveCounter = 0;
+
+                // Try to change direction if requested
+                if (canMove(pacman.x, pacman.y, pacman.nextDirection)) {
+                    pacman.direction = pacman.nextDirection;
+                }
+
+                // Move in current direction if possible
+                if (canMove(pacman.x, pacman.y, pacman.direction)) {
+                    switch (pacman.direction) {
+                        case 'right': pacman.x++; break;
+                        case 'left': pacman.x--; break;
+                        case 'up': pacman.y--; break;
+                        case 'down': pacman.y++; break;
+                    }
+
+                    // Check for dots
+                    checkDotCollision();
+
+                    // Wrap around (tunnel)
+                    if (pacman.x < 0) pacman.x = cols - 1;
+                    if (pacman.x >= cols) pacman.x = 0;
+                }
+            }
+        }
+
+        // Check if Pac-Man can move in a direction
+        function canMove(x, y, direction) {
+            let newX = x;
+            let newY = y;
+
+            switch (direction) {
+                case 'right': newX++; break;
+                case 'left': newX--; break;
+                case 'up': newY--; break;
+                case 'down': newY++; break;
+            }
+
+            // Wrap around (tunnel)
+            if (newX < 0) newX = cols - 1;
+            if (newX >= cols) newX = 0;
+
+            // Check if the new position is a wall
+            return maze[newY] && maze[newY][newX] !== 1;
+        }
+
+        // Check for dot collisions
+        function checkDotCollision() {
+            for (let i = dots.length - 1; i >= 0; i--) {
+                const dot = dots[i];
+                if (dot.x === pacman.x && dot.y === pacman.y) {
+                    // Remove dot
+                    dots.splice(i, 1);
+
+                    // Update score
+                    score += dot.isPower ? 50 : 10;
+                    scoreElement.textContent = score;
+
+                    // Activate power mode if it's a power pellet
+                    if (dot.isPower) {
+                        powerMode = true;
+                        powerModeTimer = POWER_MODE_DURATION;
+                    }
+
+                    // Check for level completion
+                    if (dots.length === 0) {
+                        levelUp();
+                    }
+                }
+            }
+        }
+
+        // Move ghosts
+        function moveGhosts() {
+            for (const ghost of ghosts) {
+                ghost.moveCounter++;
+
+                // Only move when counter reaches the game speed threshold
+                if (ghost.moveCounter >= (powerMode ? gameSpeed * 1.5 : gameSpeed)) {
+                    ghost.moveCounter = 0;
+
+                    // Simple AI: try to move in current direction, otherwise pick a random direction
+                    if (!canMove(ghost.x, ghost.y, ghost.direction) || Math.random() < 0.1) {
+                        const directions = ['up', 'down', 'left', 'right'];
+                        const possibleDirections = directions.filter(dir =>
+                            dir !== getOppositeDirection(ghost.direction) && canMove(ghost.x, ghost.y, dir)
+                        );
+
+                        if (possibleDirections.length > 0) {
+                            ghost.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                        }
+                    }
+
+                    // Move ghost
+                    switch (ghost.direction) {
+                        case 'right': ghost.x++; break;
+                        case 'left': ghost.x--; break;
+                        case 'up': ghost.y--; break;
+                        case 'down': ghost.y++; break;
+                    }
+
+                    // Wrap around (tunnel)
+                    if (ghost.x < 0) ghost.x = cols - 1;
+                    if (ghost.x >= cols) ghost.x = 0;
+
+                    // Check for collision with Pac-Man
+                    if (ghost.x === pacman.x && ghost.y === pacman.y) {
+                        if (powerMode) {
+                            // Ghost is eaten
+                            score += 200;
+                            scoreElement.textContent = score;
+
+                            // Reset ghost position
+                            ghost.x = 14 + Math.floor(Math.random() * 3);
+                            ghost.y = 10;
+                        } else {
+                            // Pac-Man is caught
+                            lives--;
+                            livesElement.textContent = lives;
+
+                            if (lives <= 0) {
+                                gameOver();
+                            } else {
+                                resetPositions();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Get opposite direction
+        function getOppositeDirection(dir) {
+            switch (dir) {
+                case 'up': return 'down';
+                case 'down': return 'up';
+                case 'left': return 'right';
+                case 'right': return 'left';
+            }
+        }
+
+        // Update power mode
+        function updatePowerMode() {
+            if (powerMode) {
+                powerModeTimer--;
+
+                if (powerModeTimer <= 0) {
+                    powerMode = false;
+                }
+            }
+        }
+
+        // Level up
+        function levelUp() {
+            level++;
+            levelElement.textContent = level;
+
+            // Increase difficulty
+            for (const ghost of ghosts) {
+                ghost.speed = Math.min(ghost.speed + 0.2, 5);
+            }
+
+            // Reset positions and generate new dots
+            resetPositions();
+            initDots();
+        }
+
+        // Reset positions
+        function resetPositions() {
+            pacman.x = 1;
+            pacman.y = 1;
+            pacman.direction = 'right';
+            pacman.nextDirection = 'right';
+            pacman.moveCounter = 0;
+
+            ghosts[0].x = 14;
+            ghosts[0].y = 10;
+            ghosts[1].x = 15;
+            ghosts[1].y = 10;
+            ghosts[2].x = 13;
+            ghosts[2].y = 10;
+            ghosts[3].x = 16;
+            ghosts[3].y = 10;
+
+            for (const ghost of ghosts) {
+                ghost.moveCounter = 0;
+            }
+        }
+
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(gameLoop);
+
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        // Start game
+        function startGame() {
+            score = 0;
+            lives = 3;
+            level = 1;
+
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+            levelElement.textContent = level;
+
+            gameOverScreen.style.display = 'none';
+            gameRunning = true;
+
+            initDots();
+            resetPositions();
+
+            gameLoop = requestAnimationFrame(update);
+        }
+
+        // Set game speed
+        function setGameSpeed(speed) {
+            gameSpeed = speed;
+
+            // Update active button
+            slowBtn.classList.remove('active');
+            mediumBtn.classList.remove('active');
+            fastBtn.classList.remove('active');
+
+            if (speed === 15) {
+                slowBtn.classList.add('active');
+            } else if (speed === 10) {
+                mediumBtn.classList.add('active');
+            } else if (speed === 5) {
+                fastBtn.classList.add('active');
+            }
+        }
+
+        // Main game update function
+        function update() {
+            if (!gameRunning) return;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw game elements
+            drawMaze();
+            drawDots();
+            drawPacman();
+            drawGhosts();
+
+            // Update game state
+            movePacman();
+            moveGhosts();
+            updatePowerMode();
+
+            // Continue game loop
+            gameLoop = requestAnimationFrame(update);
+        }
+
+        // Event listeners for keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    pacman.nextDirection = 'up';
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    pacman.nextDirection = 'down';
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    pacman.nextDirection = 'left';
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    pacman.nextDirection = 'right';
+                    e.preventDefault();
+                    break;
+            }
+        });
+
+        // Event listeners for mobile controls
+        upBtn.addEventListener('touchstart', () => {
+            if (gameRunning) pacman.nextDirection = 'up';
+        });
+
+        downBtn.addEventListener('touchstart', () => {
+            if (gameRunning) pacman.nextDirection = 'down';
+        });
+
+        leftBtn.addEventListener('touchstart', () => {
+            if (gameRunning) pacman.nextDirection = 'left';
+        });
+
+        rightBtn.addEventListener('touchstart', () => {
+            if (gameRunning) pacman.nextDirection = 'right';
+        });
+
+        // Prevent default touch behavior for control buttons
+        document.querySelectorAll('.control-btn').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+            });
+        });
+
+        // Speed control buttons
+        slowBtn.addEventListener('click', () => setGameSpeed(15));
+        mediumBtn.addEventListener('click', () => setGameSpeed(10));
+        fastBtn.addEventListener('click', () => setGameSpeed(5));
+
+        // Start and restart buttons
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        // Initialize the game (draw initial state)
+        initDots();
+        drawMaze();
+        drawDots();
+        drawPacman();
+        drawGhosts();
+    </script>
+</body>
+
+</html>

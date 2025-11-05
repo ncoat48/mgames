@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors - GameHub</title>
+    <link rel="stylesheet" href="../styles/rps.css">
+
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>GameHub</h1>
+        </div>
+        <nav>
+            <a href="../index.html" class="nav">Home</a>
+            <button class="nav active">Rock Paper Scissors</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="stage">
+            <a href="../index.html" class="btn secondary back-btn">← Back to Games</a>
+
+            <div class="game-header">
+                <h2>Rock Paper Scissors</h2>
+                <p>Choose your weapon and see if you can beat the computer!</p>
+            </div>
+
+            <div class="rps-container">
+                <div class="rps-choices">
+                    <div class="rps-choice" data-choice="rock">
+                        <div class="rps-icon">✊</div>
+                        <div>Rock</div>
+                    </div>
+                    <div class="rps-choice" data-choice="paper">
+                        <div class="rps-icon">✋</div>
+                        <div>Paper</div>
+                    </div>
+                    <div class="rps-choice" data-choice="scissors">
+                        <div class="rps-icon">✌️</div>
+                        <div>Scissors</div>
+                    </div>
+                </div>
+
+                <div class="choices-display">
+                    <div class="choice-box">
+                        <div>You</div>
+                        <div class="choice-icon" id="playerChoice">❓</div>
+                    </div>
+                    <div class="choice-box">
+                        <div>VS</div>
+                    </div>
+                    <div class="choice-box">
+                        <div>Computer</div>
+                        <div class="choice-icon" id="computerChoice">❓</div>
+                    </div>
+                </div>
+
+                <div class="rps-result" id="rpsResult">Make your choice!</div>
+
+                <div class="rps-score">
+                    <div class="score-box">
+                        <div>Player</div>
+                        <div class="score-value" id="rpsPlayerScore">0</div>
+                    </div>
+                    <div class="score-box">
+                        <div>Computer</div>
+                        <div class="score-value" id="rpsComputerScore">0</div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <div>Total Games: <span id="rpsTotalGames">0</span></div>
+                    <div><button class="btn secondary" id="rpsReset">Reset Score</button></div>
+                </div>
+                <button class="fullscreen-btn" id="rpsFullscreen" title="Toggle Fullscreen">⛶</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const rpsResult = document.getElementById('rpsResult');
+        const rpsPlayerScore = document.getElementById('rpsPlayerScore');
+        const rpsComputerScore = document.getElementById('rpsComputerScore');
+        const rpsTotalGames = document.getElementById('rpsTotalGames');
+        const playerChoiceIcon = document.getElementById('playerChoice');
+        const computerChoiceIcon = document.getElementById('computerChoice');
+
+        let rps = {
+            playerScore: 0,
+            computerScore: 0,
+            totalGames: 0
+        };
+
+        const choices = ['rock', 'paper', 'scissors'];
+        const choiceIcons = {
+            rock: '✊',
+            paper: '✋',
+            scissors: '✌️'
+        };
+
+        document.querySelectorAll('.rps-choice').forEach(choice => {
+            choice.addEventListener('click', () => {
+                const playerChoice = choice.dataset.choice;
+                const computerChoice = choices[Math.floor(Math.random() * 3)];
+
+                // Update choice displays
+                playerChoiceIcon.textContent = choiceIcons[playerChoice];
+                computerChoiceIcon.textContent = choiceIcons[computerChoice];
+
+                const result = determineWinner(playerChoice, computerChoice);
+                displayResult(playerChoice, computerChoice, result);
+
+                rps.totalGames++;
+                rpsTotalGames.textContent = rps.totalGames;
+
+                if (result === 'win') {
+                    rps.playerScore++;
+                    rpsPlayerScore.textContent = rps.playerScore;
+                } else if (result === 'lose') {
+                    rps.computerScore++;
+                    rpsComputerScore.textContent = rps.computerScore;
+                }
+            });
+        });
+
+        function determineWinner(player, computer) {
+            if (player === computer) return 'tie';
+
+            if (
+                (player === 'rock' && computer === 'scissors') ||
+                (player === 'paper' && computer === 'rock') ||
+                (player === 'scissors' && computer === 'paper')
+            ) {
+                return 'win';
+            }
+
+            return 'lose';
+        }
+
+        function displayResult(player, computer, result) {
+            let message = '';
+
+            // Get CSS variable values correctly
+            const root = getComputedStyle(document.documentElement);
+            const successColor = root.getPropertyValue('--success').trim();
+            const dangerColor = root.getPropertyValue('--danger').trim();
+            const warningColor = root.getPropertyValue('--warning').trim();
+
+            if (result === 'win') {
+                message = `You win! ${choiceIcons[player]} beats ${choiceIcons[computer]}`;
+                rpsResult.style.color = successColor;
+            } else if (result === 'lose') {
+                message = `You lose! ${choiceIcons[computer]} beats ${choiceIcons[player]}`;
+                rpsResult.style.color = dangerColor;
+            } else {
+                message = `It's a tie! ${choiceIcons[player]} vs ${choiceIcons[computer]}`;
+                rpsResult.style.color = warningColor;
+            }
+
+            rpsResult.textContent = message;
+            rpsResult.classList.add('pulse');
+            setTimeout(() => rpsResult.classList.remove('pulse'), 500);
+        }
+
+
+        document.getElementById('rpsReset').addEventListener('click', () => {
+            rps = {
+                playerScore: 0,
+                computerScore: 0,
+                totalGames: 0
+            };
+            rpsPlayerScore.textContent = '0';
+            rpsComputerScore.textContent = '0';
+            rpsTotalGames.textContent = '0';
+            rpsResult.textContent = 'Make your choice!';
+            rpsResult.style.color = '';
+            playerChoiceIcon.textContent = '❓';
+            computerChoiceIcon.textContent = '❓';
+        });
+
+
+        // Full screen functionality
+        const rpsFullscreen = document.getElementById('rpsFullscreen');
+        const rpsContainer = document.querySelector('.rps-container');
+
+        rpsFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                rpsContainer.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                rpsFullscreen.innerHTML = '⛷';
+            } else {
+                document.exitFullscreen();
+                rpsFullscreen.innerHTML = '⛶';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            rpsFullscreen.innerHTML = document.fullscreenElement ? '⛷' : '⛶';
+        });
+    </script>
+</body>
+
+</html>

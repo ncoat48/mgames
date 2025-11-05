@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Chess — GameHub</title>
+    <link rel="stylesheet" href="../styles/chess.css" />
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>GameHub</h1>
+        </div>
+        <nav>
+            <a class="nav">Chess</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="stage">
+            <a href="../index.html" class="btn secondary back-btn">← Back to Games</a>
+
+            <div class="game-header">
+                <h2>Chess</h2>
+                <p>The ultimate strategy board game — responsive & mobile-friendly</p>
+            </div>
+
+            <div class="chess-container">
+                <div class="game-panel">
+                    <div class="game-info">
+                        <div class="status" id="status">White to move</div>
+                        <div class="controls">
+                            <div class="control-row">
+                                <button class="btn" id="newBtn">New Game</button>
+                                <button class="btn secondary" id="undoBtn">Undo</button>
+                                <button class="btn secondary" id="flipBtn">Flip</button>
+                                <button class="fullscreen-btn" id="chessFullscreen" title="Toggle Fullscreen">⛶</button>
+                            </div>
+
+                            <div class="game-mode">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="vsComputer">
+                                    <span class="checkmark"></span>
+                                    vs Computer
+                                </label>
+
+                                <select id="aiMode" class="select">
+                                    <option value="random">AI: Random</option>
+                                    <option value="minimax2">AI: Minimax (depth 2)</option>
+                                    <option value="minimax3">AI: Minimax (depth 3)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="moves-panel">
+                        <h3>Move History</h3>
+                        <div class="moves" id="moves"></div>
+                    </div>
+
+                    <div class="game-data">
+                        <div class="data-item"><strong>FEN:</strong> <span id="fen"></span></div>
+                        <div class="data-item"><strong>PGN:</strong> <span id="pgn"></span></div>
+                    </div>
+                </div>
+
+                <div class="board-container">
+                    <div class="board" id="board" role="grid" aria-label="Chess board"></div>
+                    <div class="footer">
+                        <small>Tap a piece to select, tap destination to move.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- chess.js for rules -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="../scripts/chess.js"></script>
+</body>
+
+</html>

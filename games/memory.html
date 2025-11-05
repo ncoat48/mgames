@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Match - GameHub</title>
+    <link rel="stylesheet" href="../styles/memory.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>GameHub</h1>
+        </div>
+        <nav>
+            <a href="../index.html" class="nav">Home</a>
+            <button class="nav active">Memory Match</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="stage">
+            <a href="../index.html" class="btn secondary back-btn">← Back to Games</a>
+
+            <div class="game-header">
+                <h2>Memory Match</h2>
+                <p>Find all matching pairs of cards</p>
+            </div>
+
+            <div class="memory-container">
+                <div class="cards" id="memoryGrid"></div>
+                <div class="footer">
+                    <div>Attempts: <span id="memAttempts">0</span> | Matched: <span id="memMatched">0</span>/8</div>
+                    <div><button class="btn" id="memReset">Shuffle Cards</button></div>
+                    <div><button class="fullscreen-btn" id="memoryFullscreen" title="Toggle Fullscreen">⛶</button></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const memGrid = document.getElementById('memoryGrid');
+        const memAttempts = document.getElementById('memAttempts');
+        const memMatched = document.getElementById('memMatched');
+
+        let mem = {
+            cards: [],
+            first: null,
+            second: null,
+            lock: false,
+            attempts: 0,
+            matched: 0
+        };
+
+        function makeCards() {
+            const icons = ['🍎', '🍌', '🍇', '🍓', '🍒', '🥝', '🍍', '🍑'];
+            const pool = icons.concat(icons).slice(0, 16);
+
+            // Shuffle
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+
+            mem.cards = pool.map((v, i) => ({
+                id: i,
+                value: v,
+                flipped: false,
+                matched: false
+            }));
+
+            mem.first = null;
+            mem.second = null;
+            mem.lock = false;
+            mem.attempts = 0;
+            mem.matched = 0;
+            memAttempts.textContent = '0';
+            memMatched.textContent = '0';
+            renderMemory();
+        }
+
+        function renderMemory() {
+            memGrid.innerHTML = '';
+            mem.cards.forEach(card => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                if (card.flipped || card.matched) {
+                    el.classList.add('flipped');
+                }
+                if (card.matched) {
+                    el.classList.add('matched');
+                }
+
+                el.innerHTML = `
+          <div class="front">${card.value}</div>
+          <div class="back">?</div>
+        `;
+
+                el.addEventListener('click', () => {
+                    if (mem.lock || card.flipped || card.matched) return;
+                    flipCard(card.id);
+                });
+
+                memGrid.appendChild(el);
+            });
+        }
+
+        function flipCard(id) {
+            const c = mem.cards.find(x => x.id === id);
+            c.flipped = true;
+            renderMemory();
+
+            if (!mem.first) {
+                mem.first = c;
+                return;
+            }
+
+            mem.second = c;
+            mem.lock = true;
+            mem.attempts++;
+            memAttempts.textContent = mem.attempts;
+
+            if (mem.first.value === mem.second.value) {
+                mem.first.matched = mem.second.matched = true;
+                mem.matched += 2;
+                memMatched.textContent = mem.matched;
+                mem.resetTurn();
+
+                if (mem.matched === mem.cards.length) {
+                    setTimeout(() => {
+                        alert(`Congratulations! You matched all pairs in ${mem.attempts} attempts!`);
+                    }, 300);
+                }
+            } else {
+                setTimeout(() => {
+                    mem.first.flipped = false;
+                    mem.second.flipped = false;
+                    renderMemory();
+                    mem.resetTurn();
+                }, 1000);
+            }
+        }
+
+        mem.resetTurn = function () {
+            mem.first = null;
+            mem.second = null;
+            mem.lock = false;
+        };
+
+        document.getElementById('memReset').addEventListener('click', makeCards);
+        makeCards();
+
+        // Full screen functionality
+        const memoryFullscreen = document.getElementById('memoryFullscreen');
+        const memoryContainer = document.querySelector('.memory-container');
+
+        memoryFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                memoryContainer.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                memoryFullscreen.innerHTML = '⛷';
+            } else {
+                document.exitFullscreen();
+                memoryFullscreen.innerHTML = '⛶';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            memoryFullscreen.innerHTML = document.fullscreenElement ? '⛷' : '⛶';
+        });
+    </script>
+</body>
+
+</html>

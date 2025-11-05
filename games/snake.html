@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game - GameHub</title>
+    <link rel="stylesheet" href="../styles/snake.css">
+    <meta name="google-adsense-account" content="ca-pub-xxxxxxxxxxxxxxxx">
+
+
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>GameHub</h1>
+        </div>
+        <nav>
+            <a href="../index.html" class="nav">Home</a>
+            <button class="nav active">Snake Game</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="stage">
+            <a href="../index.html" class="btn secondary back-btn">← Back to Games</a>
+
+            <div class="game-header">
+                <h2>Snake Game</h2>
+                <p>Use arrow keys to control the snake. Eat food to grow!</p>
+            </div>
+
+            <div class="snake-container">
+                <div class="snake-board" id="snakeBoard"></div>
+
+                <div class="mobile-controls">
+                    <div></div>
+                    <button class="control-btn" data-direction="up">↑</button>
+                    <div></div>
+                    <button class="control-btn" data-direction="left">←</button>
+                    <div></div>
+                    <button class="control-btn" data-direction="right">→</button>
+                    <div></div>
+                    <button class="control-btn" data-direction="down">↓</button>
+                    <div></div>
+                </div>
+
+                <div class="snake-controls">
+                    <button class="btn" id="snakeStart">Start Game</button>
+                    <button class="btn secondary" id="snakeReset">Reset</button>
+                </div>
+                <div class="footer">
+                    <div>Score: <span id="snakeScore">0</span> | Length: <span id="snakeLength">1</span></div>
+                    <div id="snakeStatus">Press Start to play</div>
+                    <button class="fullscreen-btn" id="snakeFullscreen" title="Toggle Fullscreen">⛶</button>
+                </div>
+                <!-- Ad Section -->
+                <div id="ad-container"></div>
+                <script>
+                    fetch('../ads/ads.html')
+                        .then(r => r.text())
+                        .then(html => {
+                            document.getElementById('ad-container').innerHTML = html;
+                            const s = document.createElement('script');
+                            s.async = true;
+                            s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx";
+                            s.crossOrigin = "anonymous";
+                            document.head.appendChild(s);
+                        });
+                </script>
+
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const snakeBoard = document.getElementById('snakeBoard');
+        const snakeScore = document.getElementById('snakeScore');
+        const snakeLength = document.getElementById('snakeLength');
+        const snakeStatus = document.getElementById('snakeStatus');
+
+        let snake = {
+            gridSize: 20,
+            snake: [{ x: 10, y: 10 }],
+            food: { x: 5, y: 5 },
+            direction: 'right',
+            nextDirection: 'right',
+            gameInterval: null,
+            score: 0,
+            speed: 100,
+            gameRunning: false
+        };
+
+        function initSnakeBoard() {
+            snakeBoard.innerHTML = '';
+            snakeBoard.style.gridTemplateColumns = `repeat(${snake.gridSize}, 1fr)`;
+
+            for (let y = 0; y < snake.gridSize; y++) {
+                for (let x = 0; x < snake.gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'snake-cell';
+                    cell.id = `cell-${x}-${y}`;
+                    snakeBoard.appendChild(cell);
+                }
+            }
+        }
+
+        function drawSnake() {
+            // Clear board
+            document.querySelectorAll('.snake-cell').forEach(cell => {
+                cell.classList.remove('snake', 'food');
+            });
+
+            // Draw snake
+            snake.snake.forEach(segment => {
+                const cell = document.getElementById(`cell-${segment.x}-${segment.y}`);
+                if (cell) cell.classList.add('snake');
+            });
+
+            // Draw food
+            const foodCell = document.getElementById(`cell-${snake.food.x}-${snake.food.y}`);
+            if (foodCell) foodCell.classList.add('food');
+        }
+
+        function moveSnake() {
+            const head = { ...snake.snake[0] };
+            snake.direction = snake.nextDirection;
+
+            switch (snake.direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+
+            // Check wall collision
+            if (head.x < 0 || head.x >= snake.gridSize || head.y < 0 || head.y >= snake.gridSize) {
+                gameOver();
+                return;
+            }
+
+            // Check self collision
+            if (snake.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameOver();
+                return;
+            }
+
+            snake.snake.unshift(head);
+
+            // Check food collision
+            if (head.x === snake.food.x && head.y === snake.food.y) {
+                snake.score += 10;
+                snakeScore.textContent = snake.score;
+                snakeLength.textContent = snake.snake.length;
+                generateFood();
+            } else {
+                snake.snake.pop();
+            }
+
+            drawSnake();
+        }
+
+        function generateFood() {
+            let newFood;
+            do {
+                newFood = {
+                    x: Math.floor(Math.random() * snake.gridSize),
+                    y: Math.floor(Math.random() * snake.gridSize)
+                };
+            } while (snake.snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+
+            snake.food = newFood;
+        }
+
+        function gameOver() {
+            clearInterval(snake.gameInterval);
+            snake.gameRunning = false;
+            snakeStatus.textContent = `Game Over! Final Score: ${snake.score}`;
+            document.getElementById('snakeStart').textContent = 'Play Again';
+        }
+
+        function startSnake() {
+            if (snake.gameRunning) return;
+
+            snake = {
+                gridSize: 20,
+                snake: [{ x: 10, y: 10 }],
+                food: { x: 5, y: 5 },
+                direction: 'right',
+                nextDirection: 'right',
+                gameInterval: null,
+                score: 0,
+                speed: 100,
+                gameRunning: true
+            };
+
+            snakeScore.textContent = '0';
+            snakeLength.textContent = '1';
+            snakeStatus.textContent = 'Game Running';
+            document.getElementById('snakeStart').textContent = 'Restart';
+
+            generateFood();
+            drawSnake();
+
+            snake.gameInterval = setInterval(moveSnake, snake.speed);
+        }
+
+        // Keyboard controls for snake
+        document.addEventListener('keydown', (e) => {
+            if (!snake.gameRunning) return;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (snake.direction !== 'down') snake.nextDirection = 'up';
+                    break;
+                case 'ArrowDown':
+                    if (snake.direction !== 'up') snake.nextDirection = 'down';
+                    break;
+                case 'ArrowLeft':
+                    if (snake.direction !== 'right') snake.nextDirection = 'left';
+                    break;
+                case 'ArrowRight':
+                    if (snake.direction !== 'left') snake.nextDirection = 'right';
+                    break;
+            }
+        });
+
+        // Mobile controls
+        document.querySelectorAll('.control-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!snake.gameRunning) return;
+                const direction = btn.dataset.direction;
+
+                if (
+                    (direction === 'up' && snake.direction !== 'down') ||
+                    (direction === 'down' && snake.direction !== 'up') ||
+                    (direction === 'left' && snake.direction !== 'right') ||
+                    (direction === 'right' && snake.direction !== 'left')
+                ) {
+                    snake.nextDirection = direction;
+                }
+            });
+        });
+
+        document.getElementById('snakeStart').addEventListener('click', startSnake);
+        document.getElementById('snakeReset').addEventListener('click', () => {
+            clearInterval(snake.gameInterval);
+            snake.gameRunning = false;
+            snakeStatus.textContent = 'Press Start to play';
+            document.getElementById('snakeStart').textContent = 'Start Game';
+            initSnakeBoard();
+        });
+
+        initSnakeBoard();
+
+        // Full screen functionality
+        const snakeFullscreen = document.getElementById('snakeFullscreen');
+        const snakeContainer = document.querySelector('.snake-container');
+
+        snakeFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                snakeContainer.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                snakeFullscreen.innerHTML = '⛷';
+            } else {
+                document.exitFullscreen();
+                snakeFullscreen.innerHTML = '⛶';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            snakeFullscreen.innerHTML = document.fullscreenElement ? '⛷' : '⛶';
+        });
+    </script>
+</body>
+
+</html>

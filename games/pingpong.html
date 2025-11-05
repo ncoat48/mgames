@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Pong Game</title>
+    <!-- Load Tailwind CSS for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the arcade aesthetic and canvas */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            /* Dark background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #ffffff;
+            padding: 1rem;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 4px 60px rgba(0, 255, 100, 0.4);
+            /* Neon glow */
+            overflow: hidden;
+            background-color: #000000;
+        }
+
+        #pongCanvas {
+            border: 4px solid #00ff64;
+            /* Neon green border */
+            cursor: none;
+            /* Hide default cursor */
+            touch-action: none;
+            /* Prevent default mobile scrolling */
+        }
+
+        .score-board {
+            font-size: 2.5rem;
+            font-weight: 700;
+            padding: 1rem 0;
+            color: #00ff64;
+            text-shadow: 0 0 8px rgba(0, 255, 100, 0.6);
+        }
+
+        /* Message box styling */
+        #messageBox {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #00ff64;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 100, 0.8);
+            z-index: 100;
+            display: none;
+            max-width: 90%;
+        }
+
+        #messageBox h3 {
+            font-size: 1.5rem;
+            color: #00ff64;
+            margin-bottom: 1rem;
+        }
+
+        .back-btn-2 {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #4a90e2;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: Arial, sans-serif;
+        }
+
+        .back-btn-2:hover {
+            background: #357ae8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        #messageBox button {
+            background-color: #00ff64;
+            color: #000;
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        #messageBox button:hover {
+            background-color: #00e056;
+        }
+
+        .controls-info {
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #90ee90;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div class="score-board">
+            <span id="cpuScore">0</span> - <span id="playerScore">0</span>
+        </div>
+        <canvas id="pongCanvas"></canvas>
+    </div>
+    <a href="../index.html" class="back-btn-2">← Back</a>
+
+    <div class="controls-info">
+        <p><strong>PC:</strong> Use the Mouse to move your paddle (right side).</p>
+        <p><strong>Mobile:</strong> Touch and drag on the right half of the screen to move your paddle.</p>
+    </div>
+
+    <!-- Custom Message Box for alerts/wins -->
+    <div id="messageBox">
+        <h3 id="messageText"></h3>
+        <button onclick="hideMessageAndReset()">Start Game</button>
+    </div>
+
+
+    <script>
+        // Global game variables
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game Configuration
+        const MAX_SCORE = 5;
+        const PADDLE_WIDTH_RATIO = 0.015; // 1.5% of canvas width
+        const PADDLE_HEIGHT_RATIO = 0.15; // 15% of canvas height
+        const BALL_RADIUS_RATIO = 0.01; // 1% of canvas width
+
+        let paddleWidth, paddleHeight, ballRadius;
+        let playerY, cpuY;
+        let ballX, ballY;
+        let ballSpeedX, ballSpeedY;
+        const INITIAL_BALL_SPEED = 5;
+        const MAX_BALL_SPEED = 12;
+
+        let playerScore = 0;
+        let cpuScore = 0;
+        let animationFrameId;
+        let gameRunning = false;
+
+        // --- Core Functions ---
+
+        /**
+         * Adjusts canvas size and game element dimensions based on screen size.
+         * Ensures responsiveness.
+         */
+        function resizeCanvas() {
+            // Set canvas size dynamically
+            const gameContainer = document.getElementById('game-container');
+            const newWidth = Math.min(gameContainer.offsetWidth, 800);
+
+            // Fixed aspect ratio (e.g., 16:9 or 4:3). Using 4:3 aspect ratio.
+            canvas.width = newWidth;
+            canvas.height = newWidth * 0.75;
+
+            // Calculate dimensions based on new size
+            paddleWidth = canvas.width * PADDLE_WIDTH_RATIO;
+            paddleHeight = canvas.height * PADDLE_HEIGHT_RATIO;
+            ballRadius = canvas.width * BALL_RADIUS_RATIO;
+
+            // Adjust paddle positions to prevent them from going off screen on resize
+            playerY = Math.min(playerY, canvas.height - paddleHeight);
+            cpuY = Math.min(cpuY, canvas.height - paddleHeight);
+
+            // Re-center the ball if it was outside bounds
+            ballX = Math.min(ballX, canvas.width - ballRadius);
+            ballY = Math.min(ballY, canvas.height - ballRadius);
+
+            if (!gameRunning) {
+                resetBall(true);
+            }
+        }
+
+        /**
+         * Resets the ball to the center and reverses its direction.
+         * @param {boolean} isInitial - True if called during initial setup or resize.
+         */
+        function resetBall(isInitial = false) {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 2;
+
+            if (isInitial) {
+                // Set initial positions for paddles and ball speed
+                playerY = canvas.height / 2 - paddleHeight / 2;
+                cpuY = canvas.height / 2 - paddleHeight / 2;
+                ballSpeedX = INITIAL_BALL_SPEED * (Math.random() < 0.5 ? 1 : -1);
+                ballSpeedY = INITIAL_BALL_SPEED * (Math.random() * 2 - 1); // Random angle
+            } else {
+                // Keep current speed magnitude, just reverse X direction
+                ballSpeedX = -ballSpeedX;
+
+                // Slightly randomize Y speed after score
+                ballSpeedY = INITIAL_BALL_SPEED * (Math.random() * 2 - 1);
+            }
+        }
+
+        /**
+         * Shows the custom modal message box.
+         * @param {string} text - The message to display.
+         */
+        function showMessage(text) {
+            cancelAnimationFrame(animationFrameId);
+            gameRunning = false;
+            document.getElementById('messageText').textContent = text;
+            document.getElementById('messageBox').style.display = 'block';
+            drawGame(); // Draw one last frame with the current state
+        }
+
+        /**
+         * Hides the message box and starts/resets the game.
+         */
+        function hideMessageAndReset() {
+            document.getElementById('messageBox').style.display = 'none';
+            playerScore = 0;
+            cpuScore = 0;
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('cpuScore').textContent = cpuScore;
+            resetBall(true);
+            if (!gameRunning) {
+                gameRunning = true;
+                animate();
+            }
+        }
+
+        // --- Drawing Functions ---
+
+        /**
+         * Draws the background, centerline, paddles, and ball.
+         */
+        function drawGame() {
+            // 1. Draw Background
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Draw Center Line (Dashed)
+            ctx.strokeStyle = '#00ff64'; // Neon Green
+            ctx.lineWidth = 4;
+            ctx.setLineDash([10, 10]); // Dash pattern (10px line, 10px gap)
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash line
+
+            // 3. Draw Paddles
+            ctx.fillStyle = '#00ffff'; // Neon Blue/Cyan
+
+            // CPU Paddle (Left)
+            ctx.fillRect(0, cpuY, paddleWidth, paddleHeight);
+
+            // Player Paddle (Right)
+            ctx.fillRect(canvas.width - paddleWidth, playerY, paddleWidth, paddleHeight);
+
+            // 4. Draw Ball
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ff00ff'; // Neon Magenta
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        // --- Game Logic ---
+
+        /**
+         * Updates the ball's position and handles collisions.
+         */
+        function updateBall() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // 1. Wall Collision (Top/Bottom)
+            if (ballY + ballRadius > canvas.height || ballY - ballRadius < 0) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            // 2. Paddle Collision (Player - Right)
+            const playerPaddleX = canvas.width - paddleWidth;
+            if (ballX + ballRadius > playerPaddleX && // Check X position
+                ballY > playerY && ballY < playerY + paddleHeight && // Check Y position
+                ballSpeedX > 0) // Only check if moving towards paddle
+            {
+                // Calculate where the ball hit the paddle (relative to center)
+                const relativeIntersectY = (playerY + (paddleHeight / 2)) - ballY;
+                const normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight / 2));
+
+                // Adjust speed and angle based on where it hit
+                ballSpeedY = normalizedRelativeIntersectionY * -INITIAL_BALL_SPEED; // Max angle at ends
+                ballSpeedX = -ballSpeedX;
+
+                // Increase speed up to max limit
+                const newSpeed = Math.min(Math.abs(ballSpeedX) + 0.5, MAX_BALL_SPEED);
+                ballSpeedX = (ballSpeedX > 0 ? newSpeed : -newSpeed);
+
+                // Prevent ball from sticking by moving it slightly away
+                ballX = playerPaddleX - ballRadius;
+            }
+
+            // 3. Paddle Collision (CPU - Left)
+            if (ballX - ballRadius < paddleWidth && // Check X position
+                ballY > cpuY && ballY < cpuY + paddleHeight && // Check Y position
+                ballSpeedX < 0) // Only check if moving towards paddle
+            {
+                const relativeIntersectY = (cpuY + (paddleHeight / 2)) - ballY;
+                const normalizedRelativeIntersectionY = (relativeIntersectY / (paddleHeight / 2));
+
+                ballSpeedY = normalizedRelativeIntersectionY * -INITIAL_BALL_SPEED;
+                ballSpeedX = -ballSpeedX;
+
+                const newSpeed = Math.min(Math.abs(ballSpeedX) + 0.5, MAX_BALL_SPEED);
+                ballSpeedX = (ballSpeedX > 0 ? newSpeed : -newSpeed);
+
+                ballX = paddleWidth + ballRadius;
+            }
+
+            // 4. Scoring (Left Wall) - CPU misses, Player scores
+            if (ballX < 0) {
+                playerScore++;
+                document.getElementById('playerScore').textContent = playerScore;
+                if (playerScore >= MAX_SCORE) {
+                    showMessage("Player Wins! Press 'Start Game' to play again.");
+                } else {
+                    resetBall();
+                }
+                return;
+            }
+
+            // 5. Scoring (Right Wall) - Player misses, CPU scores
+            if (ballX > canvas.width) {
+                cpuScore++;
+                document.getElementById('cpuScore').textContent = cpuScore;
+                if (cpuScore >= MAX_SCORE) {
+                    showMessage("CPU Wins! Press 'Start Game' to play again.");
+                } else {
+                    resetBall();
+                }
+            }
+        }
+
+        /**
+         * Simple AI for the CPU paddle to follow the ball.
+         */
+        function updateCPU() {
+            const cpuCenter = cpuY + paddleHeight / 2;
+            const error = ballY - cpuCenter;
+
+            // Adjust sensitivity/speed of the CPU
+            const CPU_SPEED = 0.08 * canvas.height;
+
+            if (error > 35) {
+                cpuY += CPU_SPEED;
+            } else if (error < -35) {
+                cpuY -= CPU_SPEED;
+            }
+
+            // Keep CPU paddle within bounds
+            cpuY = Math.max(0, Math.min(cpuY, canvas.height - paddleHeight));
+        }
+
+
+        // --- Input Handling (Mobile & PC) ---
+
+        /**
+         * Updates the player's paddle position based on mouse/touch Y position.
+         * @param {number} clientY - The Y coordinate of the event (mouse or touch).
+         */
+        function updatePlayerPaddle(clientY) {
+            // Get canvas position on the screen
+            const rect = canvas.getBoundingClientRect();
+
+            // Calculate relative Y position within the canvas
+            let y = clientY - rect.top;
+
+            // Center the paddle on the cursor/touch point
+            playerY = y - (paddleHeight / 2);
+
+            // Clamp paddle position to stay within bounds
+            playerY = Math.max(0, Math.min(playerY, canvas.height - paddleHeight));
+        }
+
+        // 1. PC Mouse Control
+        canvas.addEventListener('mousemove', (event) => {
+            if (gameRunning) {
+                updatePlayerPaddle(event.clientY);
+            }
+        });
+
+        // 2. Mobile Touch Control
+        canvas.addEventListener('touchmove', (event) => {
+            event.preventDefault(); // Prevents page scrolling
+            if (gameRunning && event.touches.length > 0) {
+                updatePlayerPaddle(event.touches[0].clientY);
+            }
+        }, { passive: false }); // Use {passive: false} to allow preventDefault
+
+
+        // --- Main Game Loop ---
+
+        /**
+         * The main loop for animation using requestAnimationFrame.
+         */
+        function animate() {
+            if (gameRunning) {
+                updateBall();
+                updateCPU();
+                drawGame();
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+
+        // --- Initialization ---
+
+        window.addEventListener('load', () => {
+            // Initial setup and show start message
+            resizeCanvas();
+            showMessage("Welcome to Responsive Pong! Hit the green button to start.");
+            window.addEventListener('resize', resizeCanvas);
+        });
+
+    </script>
+</body>
+
+</html>

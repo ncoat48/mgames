@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub - Mini Games Collection</title>
+    <link rel="stylesheet" href="styles/index.css">
+    <meta name="google-adsense-account" content="ca-pub-xxxxxxxxxxxxxxxx">
+
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>GameHub</h1>
+        </div>
+        <nav>
+            <a href="index.html" class="nav active">Home</a>
+        </nav>
+
+        <a href="https://www.paypal.com/donate/?hosted_button_id=P4PC82ZHXLEQY" class="donate-btn pulse"> Donations</a>
+
+    </header>
+
+    <main>
+        <div class="stage">
+            <section class="hero">
+                <h1>Welcome to GameHub</h1>
+                <p>Discover a collection of fun and engaging mini games. Challenge yourself and have fun!</p>
+                <button class="btn" onclick="scrollToGames()">Explore Games</button>
+            </section>
+
+            <!-- Category Filter -->
+            <section class="categories">
+                <h2>Browse by Category</h2>
+                <div class="category-filters">
+                    <button class="category-filter active" data-category="all">All Games</button>
+                    <button class="category-filter" data-category="puzzle">Puzzle</button>
+                    <button class="category-filter" data-category="arcade">Arcade</button>
+                    <button class="category-filter" data-category="strategy">Strategy</button>
+                    <button class="category-filter" data-category="classic">Classic</button>
+                    <button class="category-filter" data-category="brain">Brain Teasers</button>
+                </div>
+            </section>
+
+            <!-- Ad Section -->
+            <div id="ad-container"></div>
+            <script>
+                // Load the shared ad file
+                fetch('ads.html')
+                    .then(r => r.text())
+                    .then(html => {
+                        document.getElementById('ad-container').innerHTML = html;
+                        // Load AdSense script (needed once per page)
+                        const s = document.createElement('script');
+                        s.async = true;
+                        s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx";
+                        s.crossOrigin = "anonymous";
+                        document.head.appendChild(s);
+                    });
+            </script>
+
+
+            <section id="games">
+                <h2 style="text-align: center; margin-bottom: 2rem;">Our Games Collection</h2>
+                <div class="games-grid">
+                    <!-- Puzzle Games -->
+                    <a href="games/tictactoe.html" class="game-card" data-category="puzzle classic">
+                        <div class="game-icon">⭕</div>
+                        <h3>Tic Tac Toe</h3>
+                        <p>Classic two-player strategy game. Get three in a row to win!</p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                            <span class="game-category classic">Classic</span>
+                        </div>
+                    </a>
+
+                    <a href="games/memory.html" class="game-card" data-category="puzzle brain">
+                        <div class="game-icon">🧠</div>
+                        <h3>Memory Match</h3>
+                        <p>Train your memory by finding matching pairs of cards.</p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                            <span class="game-category brain">Brain</span>
+                        </div>
+                    </a>
+
+                    <!-- Arcade Games -->
+                    <a href="games/snake.html" class="game-card" data-category="arcade classic">
+                        <div class="game-icon">🐍</div>
+                        <h3>Snake Game</h3>
+                        <p>Classic snake game. Eat food and grow without hitting walls!</p>
+                        <div class="game-categories">
+                            <span class="game-category arcade">Arcade</span>
+                            <span class="game-category classic">Classic</span>
+                        </div>
+                    </a>
+
+                    <!-- Strategy Games -->
+                    <a href="games/rps.html" class="game-card" data-category="strategy">
+                        <div class="game-icon">✂️</div>
+                        <h3>Rock Paper Scissors</h3>
+                        <p>Challenge the computer in this classic hand game.</p>
+                        <div class="game-categories">
+                            <span class="game-category strategy">Strategy</span>
+                        </div>
+                    </a>
+
+                    <!-- Brain Teasers -->
+                    <a href="games/guessnumber.html" class="game-card" data-category="puzzle brain">
+                        <div class="game-icon">💡</div>
+                        <h3>Guess the Number</h3>
+                        <p>Test your intuition by guessing the secret number!</p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                            <span class="game-category brain">Brain</span>
+                        </div>
+                    </a>
+
+                    <a href="games/chess.html" class="game-card" data-category="strategy">
+                        <div class="game-icon">♟️</div>
+                        <h3>Chess</h3>
+                        <p>The ultimate strategy board game.</p>
+                        <div class="game-categories">
+                            <span class="game-category strategy">Strategy</span>
+                        </div>
+                    </a>
+
+                    <a href="games/sudoku.html" class="game-card" data-category="puzzle">
+                        <div class="game-icon">🧩</div>
+                        <h3>Sudoku</h3>
+                        <p>Classic number puzzle game.</p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                        </div>
+                    </a>
+
+                    <a href="games/flappybird.html" class="game-card" data-category="puzzle">
+                        <div class="game-icon">🐦</div>
+                        <h3>Flappy bird</h3>
+                        <p></p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                        </div>
+                    </a>
+
+                    <a href="games/2048_responsive.html" class="game-card" data-category="puzzle">
+                        <div class="game-icon">🔢</div>
+                        <h3>2048</h3>
+                        <p></p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                        </div>
+                    </a>
+
+                    <a href="games/mine sweeper.html" class="game-card" data-category="puzzle">
+                        <div class="game-icon">💣</div>
+                        <h3>mine sweeper</h3>
+                        <p></p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                        </div>
+                    </a>
+
+                    <a href="games/pacman.html" class="game-card" data-category="puzzle">
+                        <div class="game-icon">👻</div>
+                        <h3>pacman</h3>
+                        <p></p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                        </div>
+                    </a>
+
+
+                    <a href="games/tetris.html" class="game-card" data-category="puzzle">
+                        <div class="game-icon">🧱</div>
+                        <h3>tetris</h3>
+                        <p></p>
+                        <div class="game-categories">
+                            <span class="game-category puzzle">Puzzle</span>
+                        </div>
+                    </a>
+
+                    <a href="games/pingpong.html" class="game-card" data-category="arcade">
+                        <div class="game-icon">🎯</div>
+                        <h3>Pong</h3>
+                        <p>Classic arcade table tennis game.</p>
+                        <div class="game-categories">
+                            <span class="game-category arcade">Arcade</span>
+                        </div>
+                    </a>
+
+                    <a href="games/typing_speed_game.html" class="game-card" data-category="arcade">
+                        <div class="game-icon">⌨</div>
+                        <h3>fast_typing</h3>
+                        <p></p>
+                        <div class="game-categories">
+                            <span class="game-category arcade">Arcade</span>
+                        </div>
+                    </a>
+
+
+                    <!-- coming soon games -->
+
+
+                    <a href="#" class="game-card coming-soon" data-category="arcade">
+                        <div class="game-icon">🎯</div>
+                        <h3>Pong</h3>
+                        <p>Classic arcade table tennis game. Coming soon!</p>
+                        <div class="game-categories">
+                            <span class="game-category arcade">Arcade</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Easy to Play</h3>
+                    <p>Simple controls and intuitive gameplay for everyone.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Fast Loading</h3>
+                    <p>Lightweight games that load instantly in your browser.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Friendly</h3>
+                    <p>Play on any device - desktop, tablet, or mobile.</p>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">🏆</div>
+                    <h3>Track Progress</h3>
+                    <p>Keep track of your scores and improve your skills.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+
+    <footer style="text-align: center; padding: 2rem; color: var(--muted);">
+        <p>Made with ❤️ for gaming enthusiasts</p>
+
+        <section id="about" class="about">
+            <h2>About GameHub</h2>
+            <p>
+                GameHub is a collection of fun, lightweight, and free-to-play browser games.
+                We built this platform to bring quick entertainment to everyone — no downloads, no ads overload,
+                just pure gaming fun! Whether you're here for classic board games or fast-paced arcade challenges,
+                GameHub has something for you.
+            </p>
+            <p>
+                Our goal is to continuously expand the collection and make GameHub the go-to destination
+                for online mini games.
+            </p>
+        </section>
+        <section id="contact" class="contact">
+            <h2>Contact Us</h2>
+            <p>Have feedback, game requests, or bug reports? Let us know!</p>
+            <center>edineth506@gmail.com</center>
+            <p>© 2025 GameHub. All rights reserved.</p>
+
+            </form>
+        </section>
+        <a href="privacy/privacy.html" class="privacy-link">Privacy Policy</a>
+
+
+    </footer>
+
+    <script>
+        function scrollToGames() {
+            document.getElementById('games').scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+
+        // Enhanced Category System
+        document.addEventListener('DOMContentLoaded', function () {
+            const categoryFilters = document.querySelectorAll('.category-filter');
+            const gameCards = document.querySelectorAll('.game-card');
+            const gamesGrid = document.querySelector('.games-grid');
+
+            // Count games per category
+            function updateCategoryCounts() {
+                const counts = {
+                    all: gameCards.length,
+                    puzzle: 0,
+                    arcade: 0,
+                    strategy: 0,
+                    classic: 0,
+                    brain: 0
+                };
+
+                gameCards.forEach(card => {
+                    const categories = card.dataset.category.split(' ');
+                    categories.forEach(cat => {
+                        if (counts[cat] !== undefined) {
+                            counts[cat]++;
+                        }
+                    });
+                });
+
+                // Update filter buttons with counts
+                categoryFilters.forEach(filter => {
+                    const category = filter.dataset.category;
+                    const count = counts[category];
+
+                    // Remove existing count
+                    const existingCount = filter.querySelector('.count');
+                    if (existingCount) {
+                        existingCount.remove();
+                    }
+
+                    // Add count badge
+                    if (count > 0) {
+                        const countBadge = document.createElement('span');
+                        countBadge.className = 'count';
+                        countBadge.textContent = count;
+                        filter.appendChild(countBadge);
+                    }
+                });
+            }
+
+            // Filter games by category
+            function filterGames(category) {
+                gameCards.forEach(card => {
+                    if (category === 'all' || card.dataset.category.includes(category)) {
+                        card.style.display = 'block';
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0) scale(1)';
+                        }, 50);
+                    } else {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px) scale(0.9)';
+                        setTimeout(() => {
+                            card.style.display = 'none';
+                        }, 300);
+                    }
+                });
+
+                // Reorder grid for better visual flow
+                setTimeout(() => {
+                    const visibleCards = Array.from(gameCards).filter(card =>
+                        card.style.display !== 'none'
+                    );
+
+                    visibleCards.forEach(card => {
+                        gamesGrid.appendChild(card);
+                    });
+                }, 350);
+            }
+
+            // Initialize category counts
+            updateCategoryCounts();
+
+            // Add animation to cards
+            gameCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('fade-in');
+            });
+
+            // Category filter functionality
+            categoryFilters.forEach(filter => {
+                filter.addEventListener('click', () => {
+                    // Remove active class from all filters
+                    categoryFilters.forEach(f => f.classList.remove('active'));
+                    // Add active class to clicked filter
+                    filter.classList.add('active');
+
+                    const category = filter.dataset.category;
+                    filterGames(category);
+                });
+            });
+
+            // URL parameter support for direct category links
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryParam = urlParams.get('category');
+            if (categoryParam) {
+                const targetFilter = document.querySelector(`[data-category="${categoryParam}"]`);
+                if (targetFilter) {
+                    targetFilter.click();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

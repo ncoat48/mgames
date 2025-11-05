@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number - GameHub</title>
+    <link rel="stylesheet" href="../styles/guessnumber.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>GameHub</h1>
+        </div>
+        <nav>
+            <a href="../index.html" class="nav">Home</a>
+            <button class="nav active">Guess the Number</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="stage">
+            <a href="../index.html" class="btn secondary back-btn">← Back to Games</a>
+
+            <div class="game-header">
+                <h2>Guess the Number</h2>
+                <p>I picked a number between <strong id="gmin">1</strong> and <strong id="gmax">50</strong>. Can you
+                    guess it?</p>
+
+                <!-- Optional: Difficulty Selector -->
+                <div class="difficulty-selector">
+                    <button class="difficulty-btn active" data-min="1" data-max="50">Easy (1-50)</button>
+                    <button class="difficulty-btn" data-min="1" data-max="100">Medium (1-100)</button>
+                    <button class="difficulty-btn" data-min="1" data-max="200">Hard (1-200)</button>
+                </div>
+            </div>
+
+            <div class="guess-container">
+                <div class="guess-controls">
+                    <input type="number" id="guessInput" min="1" max="50" placeholder="Your guess">
+                    <button class="btn" id="guessBtn">Guess</button>
+                    <button class="btn secondary" id="guessReset">New Game</button>
+                </div>
+
+                <p id="guessMsg">Good luck!</p>
+
+                <div class="range-indicator">
+                    <span id="rangeMin">1</span>
+                    <div class="range-line"></div>
+                    <span id="rangeMax">50</span>
+                </div>
+
+                <button class="fullscreen-btn" id="guessFullscreen" title="Toggle Fullscreen">⛶</button>
+
+                <div class="guess-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="guessAttempts">0</div>
+                        <div class="stat-label">Attempts</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="guessGames">0</div>
+                        <div class="stat-label">Games Played</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="guessWins">0</div>
+                        <div class="stat-label">Games Won</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let target, min = 1, max = 50, attempts = 0, games = 0, wins = 0;
+        const gmin = document.getElementById('gmin');
+        const gmax = document.getElementById('gmax');
+        const guessMsg = document.getElementById('guessMsg');
+        const rangeMin = document.getElementById('rangeMin');
+        const rangeMax = document.getElementById('rangeMax');
+
+        function updateRangeDisplay() {
+            gmin.textContent = min;
+            gmax.textContent = max;
+            rangeMin.textContent = min;
+            rangeMax.textContent = max;
+            document.getElementById('guessInput').min = min;
+            document.getElementById('guessInput').max = max;
+            document.getElementById('guessInput').placeholder = `Between ${min}-${max}`;
+        }
+
+        function newTarget() {
+            target = Math.floor(Math.random() * (max - min + 1)) + min;
+            attempts = 0;
+            document.getElementById('guessAttempts').textContent = attempts;
+            guessMsg.textContent = 'Good luck!';
+            guessMsg.className = '';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').focus();
+
+            // Add animation to stats
+            const statValue = document.getElementById('guessAttempts');
+            statValue.classList.add('changed');
+            setTimeout(() => statValue.classList.remove('changed'), 600);
+        }
+
+        document.getElementById('guessBtn').addEventListener('click', () => {
+            const val = Number(document.getElementById('guessInput').value);
+            if (!val || val < min || val > max) {
+                guessMsg.textContent = `Enter a number ${min}–${max}.`;
+                guessMsg.className = 'incorrect';
+                return;
+            }
+
+            attempts++;
+            document.getElementById('guessAttempts').textContent = attempts;
+
+            // Animate attempts counter
+            const attemptsElement = document.getElementById('guessAttempts');
+            attemptsElement.classList.add('changed');
+            setTimeout(() => attemptsElement.classList.remove('changed'), 600);
+
+            if (val === target) {
+                guessMsg.textContent = `🎉 Correct! You guessed it in ${attempts} attempt(s).`;
+                guessMsg.className = 'correct';
+                wins++;
+                document.getElementById('guessWins').textContent = wins;
+                games++;
+                document.getElementById('guessGames').textContent = games;
+
+                // Animate win counter
+                document.getElementById('guessWins').classList.add('changed');
+                setTimeout(() => document.getElementById('guessWins').classList.remove('changed'), 600);
+            } else if (val < target) {
+                guessMsg.textContent = '📉 Too low. Try again!';
+                guessMsg.className = 'incorrect';
+            } else {
+                guessMsg.textContent = '📈 Too high. Try again!';
+                guessMsg.className = 'incorrect';
+            }
+        });
+
+        document.getElementById('guessReset').addEventListener('click', () => {
+            games++;
+            document.getElementById('guessGames').textContent = games;
+            newTarget();
+
+            // Animate games counter
+            document.getElementById('guessGames').classList.add('changed');
+            setTimeout(() => document.getElementById('guessGames').classList.remove('changed'), 600);
+        });
+
+        document.getElementById('guessInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('guessBtn').click();
+            }
+        });
+
+        // Optional: Difficulty selector functionality
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                min = parseInt(this.dataset.min);
+                max = parseInt(this.dataset.max);
+                updateRangeDisplay();
+                newTarget();
+            });
+        });
+
+        // Initialize game
+        updateRangeDisplay();
+        newTarget();
+
+
+        // Full screen functionality
+        const guessFullscreen = document.getElementById('guessFullscreen');
+        const guessContainer = document.querySelector('.guess-container');
+
+        guessFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                guessContainer.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                guessFullscreen.innerHTML = '⛷';
+            } else {
+                document.exitFullscreen();
+                guessFullscreen.innerHTML = '⛶';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            guessFullscreen.innerHTML = document.fullscreenElement ? '⛷' : '⛶';
+        });
+    </script>
+</body>
+
+</html>

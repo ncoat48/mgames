@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe - GameHub</title>
+    <link rel="stylesheet" href="../styles/tictactoe.css">
+
+</head>
+
+<body>
+    <header>
+        <a href="https://www.paypal.com/donate/?hosted_button_id=P4PC82ZHXLEQY" class="donate-btn purple"> Donations</a>
+        <div class="logo">
+            <div class="logo-icon">🎮</div>
+            <h1>GameHub</h1>
+        </div>
+        <nav>
+            <a href="../index.html" class="nav">Home</a>
+            <button class="nav active">Tic Tac Toe</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="stage">
+            <a href="../index.html" class="btn secondary back-btn">← Back to Games</a>
+
+            <div class="game-header">
+                <h2>Tic Tac Toe</h2>
+                <p>Two players - Get three in a row to win!</p>
+            </div>
+
+            <div class="ttt-container">
+                <div class="board" id="tttBoard"></div>
+                <div class="ttt-info">
+                    <div>Turn: <strong id="tttTurn">X</strong></div>
+                    <div id="tttStatus">Make a move.</div>
+                </div>
+                <div class="footer">
+                    <div>Player X: <span id="tttScoreX">0</span> | Player O: <span id="tttScoreO">0</span></div>
+                    <div>
+                        <button class="btn" id="tttReset">Reset Game</button>
+                    </div>
+                    <button class="fullscreen-btn" id="tttFullscreen" title="Toggle Fullscreen">⛶</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const tttBoard = document.getElementById('tttBoard');
+        const tttTurnEl = document.getElementById('tttTurn');
+        const tttStatus = document.getElementById('tttStatus');
+        const tttScoreX = document.getElementById('tttScoreX');
+        const tttScoreO = document.getElementById('tttScoreO');
+
+        let ttt = {
+            board: Array(9).fill(null),
+            turn: 'X',
+            over: false,
+            scoreX: 0,
+            scoreO: 0
+        };
+
+        function drawTTT() {
+            tttBoard.innerHTML = '';
+            ttt.board.forEach((v, i) => {
+                const cell = document.createElement('div');
+                cell.className = `cell ${v ? v.toLowerCase() : ''}`;
+                cell.textContent = v || '';
+                cell.addEventListener('click', () => {
+                    if (ttt.over || v) return;
+                    ttt.board[i] = ttt.turn;
+                    checkTTT();
+                    ttt.turn = ttt.turn === 'X' ? 'O' : 'X';
+                    tttTurnEl.textContent = ttt.turn;
+                    drawTTT();
+                });
+                tttBoard.appendChild(cell);
+            });
+        }
+
+        function checkTTT() {
+            const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+            for (const [a, b, c] of lines) {
+                if (ttt.board[a] && ttt.board[a] === ttt.board[b] && ttt.board[a] === ttt.board[c]) {
+                    ttt.over = true;
+                    tttStatus.textContent = `Winner: ${ttt.board[a]}!`;
+                    if (ttt.board[a] === 'X') {
+                        ttt.scoreX++;
+                        tttScoreX.textContent = ttt.scoreX;
+                    } else {
+                        ttt.scoreO++;
+                        tttScoreO.textContent = ttt.scoreO;
+                    }
+                    return;
+                }
+            }
+            if (ttt.board.every(Boolean)) {
+                ttt.over = true;
+                tttStatus.textContent = 'Draw!';
+            }
+        }
+
+        document.getElementById('tttReset').addEventListener('click', () => {
+            ttt.board = Array(9).fill(null);
+            ttt.turn = 'X';
+            ttt.over = false;
+            tttTurnEl.textContent = 'X';
+            tttStatus.textContent = 'Make a move.';
+            drawTTT();
+        });
+
+        drawTTT();
+
+        // Full screen functionality
+        const tttFullscreen = document.getElementById('tttFullscreen');
+        const tttContainer = document.querySelector('.ttt-container');
+
+        tttFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                tttContainer.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                tttFullscreen.innerHTML = '⛷';
+            } else {
+                document.exitFullscreen();
+                tttFullscreen.innerHTML = '⛶';
+            }
+        });
+
+        // Update icon when fullscreen changes
+        document.addEventListener('fullscreenchange', () => {
+            tttFullscreen.innerHTML = document.fullscreenElement ? '⛷' : '⛶';
+        });
+    </script>
+</body>
+
+</html>
