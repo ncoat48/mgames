@@ -54,22 +54,6 @@
                     <div id="snakeStatus">Press Start to play</div>
                     <button class="fullscreen-btn" id="snakeFullscreen" title="Toggle Fullscreen">⛶</button>
                 </div>
-                <!-- Ad Section -->
-                <div id="ad-container"></div>
-                <script>
-                    fetch('../ads/ads.html')
-                        .then(r => r.text())
-                        .then(html => {
-                            document.getElementById('ad-container').innerHTML = html;
-                            const s = document.createElement('script');
-                            s.async = true;
-                            s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx";
-                            s.crossOrigin = "anonymous";
-                            document.head.appendChild(s);
-                        });
-                </script>
-
-
             </div>
         </div>
     </main>
@@ -278,3 +262,4 @@
 
 
 </html>
+
