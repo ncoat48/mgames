@@ -1,6 +1,3 @@
-/* styles/index.css */
-
-/* CSS Variables for consistent theming */
 :root {
     --primary: #6366f1;
     --primary-dark: #4f46e5;
@@ -39,6 +36,8 @@ body {
     overflow-x: hidden;
 }
 
+
+
 /* Header Styles */
 header {
     background: rgba(31, 41, 55, 0.8);
@@ -51,8 +50,16 @@ header {
     right: 0;
     z-index: 1000;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    transition: transform 0.3s ease;
+    transform: translateY(0);
+    gap: 3rem;
+}
+
+
+header.hide {
+    transform: translateY(-100%);
 }
 
 .logo {
@@ -742,4 +749,38 @@ a:focus {
 .privacy-link:hover {
     color: #f59e0b;
     text-decoration: underline;
+}
+
+/* Game Header with Platform Tags */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.platform-tags {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.platform-tag {
+    font-size: 0.9rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.platform-tag.pc {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.platform-tag.mobile {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.platform-tag:hover {
+    transform: scale(1.1);
 }
