@@ -4,135 +4,443 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic Tac Toe - GameHub</title>
-    <link rel="stylesheet" href="../styles/tictactoe.css">
+    <title>Tic-Tac-Toe Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            margin: 20px 0;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .cell.x {
+            color: #ff5252;
+        }
+
+        .cell.o {
+            color: #4fc3f7;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .player-score {
+            text-align: center;
+        }
+
+        .player-score h3 {
+            margin-bottom: 5px;
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .status {
+                margin-right: 0;
+            }
+
+            .cell {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .cell {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animation for winning cells */
+        @keyframes winAnimation {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .winning-cell {
+            animation: winAnimation 0.5s ease 3;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .back-btn-2 {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #4a90e2;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: Arial, sans-serif;
+        }
+
+        .back-btn-2:hover {
+            background: #357ae8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
 </head>
 
 <body>
-    <header>
-        <a href="https://www.paypal.com/donate/?hosted_button_id=P4PC82ZHXLEQY" class="donate-btn purple"> Donations</a>
-        <div class="logo">
-            <div class="logo-icon">🎮</div>
-            <h1>GameHub</h1>
-        </div>
-        <nav>
-            <a href="../index.html" class="nav">Home</a>
-            <button class="nav active">Tic Tac Toe</button>
-        </nav>
-    </header>
+    <div class="container">
+        <h1>Tic-Tac-Toe</h1>
+        <a href="../index.html" class="back-btn-2">← Back</a>
 
-    <main>
-        <div class="stage">
-            <a href="../index.html" class="btn secondary back-btn">← Back to Games</a>
-
-            <div class="game-header">
-                <h2>Tic Tac Toe</h2>
-                <p>Two players - Get three in a row to win!</p>
-            </div>
-
-            <div class="ttt-container">
-                <div class="board" id="tttBoard"></div>
-                <div class="ttt-info">
-                    <div>Turn: <strong id="tttTurn">X</strong></div>
-                    <div id="tttStatus">Make a move.</div>
-                </div>
-                <div class="footer">
-                    <div>Player X: <span id="tttScoreX">0</span> | Player O: <span id="tttScoreO">0</span></div>
-                    <div>
-                        <button class="btn" id="tttReset">Reset Game</button>
-                    </div>
-                    <button class="fullscreen-btn" id="tttFullscreen" title="Toggle Fullscreen">⛶</button>
-                </div>
+        <div class="game-info">
+            <div class="status">Player X's Turn</div>
+            <div class="controls">
+                <button id="restart-btn">Restart</button>
+                <button id="reset-score-btn">Reset Score</button>
             </div>
         </div>
-    </main>
+
+        <div class="game-board">
+            <div class="cell" data-cell-index="0"></div>
+            <div class="cell" data-cell-index="1"></div>
+            <div class="cell" data-cell-index="2"></div>
+            <div class="cell" data-cell-index="3"></div>
+            <div class="cell" data-cell-index="4"></div>
+            <div class="cell" data-cell-index="5"></div>
+            <div class="cell" data-cell-index="6"></div>
+            <div class="cell" data-cell-index="7"></div>
+            <div class="cell" data-cell-index="8"></div>
+        </div>
+
+        <div class="score-board">
+            <div class="player-score">
+                <h3>Player X</h3>
+                <div class="score" id="score-x">0</div>
+            </div>
+            <div class="player-score">
+                <h3>Draws</h3>
+                <div class="score" id="score-draw">0</div>
+            </div>
+            <div class="player-score">
+                <h3>Player O</h3>
+                <div class="score" id="score-o">0</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fullscreen-btn" id="fullscreen-btn">⛶</button>
 
     <script>
-        const tttBoard = document.getElementById('tttBoard');
-        const tttTurnEl = document.getElementById('tttTurn');
-        const tttStatus = document.getElementById('tttStatus');
-        const tttScoreX = document.getElementById('tttScoreX');
-        const tttScoreO = document.getElementById('tttScoreO');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game state
+            const gameState = {
+                board: ['', '', '', '', '', '', '', '', ''],
+                currentPlayer: 'X',
+                gameActive: true,
+                scores: {
+                    X: 0,
+                    O: 0,
+                    draw: 0
+                }
+            };
 
-        let ttt = {
-            board: Array(9).fill(null),
-            turn: 'X',
-            over: false,
-            scoreX: 0,
-            scoreO: 0
-        };
+            // DOM elements
+            const cells = document.querySelectorAll('.cell');
+            const statusDisplay = document.querySelector('.status');
+            const restartButton = document.getElementById('restart-btn');
+            const resetScoreButton = document.getElementById('reset-score-btn');
+            const fullscreenButton = document.getElementById('fullscreen-btn');
+            const scoreX = document.getElementById('score-x');
+            const scoreO = document.getElementById('score-o');
+            const scoreDraw = document.getElementById('score-draw');
 
-        function drawTTT() {
-            tttBoard.innerHTML = '';
-            ttt.board.forEach((v, i) => {
-                const cell = document.createElement('div');
-                cell.className = `cell ${v ? v.toLowerCase() : ''}`;
-                cell.textContent = v || '';
-                cell.addEventListener('click', () => {
-                    if (ttt.over || v) return;
-                    ttt.board[i] = ttt.turn;
-                    checkTTT();
-                    ttt.turn = ttt.turn === 'X' ? 'O' : 'X';
-                    tttTurnEl.textContent = ttt.turn;
-                    drawTTT();
-                });
-                tttBoard.appendChild(cell);
-            });
-        }
+            // Winning conditions
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]             // diagonals
+            ];
 
-        function checkTTT() {
-            const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-            for (const [a, b, c] of lines) {
-                if (ttt.board[a] && ttt.board[a] === ttt.board[b] && ttt.board[a] === ttt.board[c]) {
-                    ttt.over = true;
-                    tttStatus.textContent = `Winner: ${ttt.board[a]}!`;
-                    if (ttt.board[a] === 'X') {
-                        ttt.scoreX++;
-                        tttScoreX.textContent = ttt.scoreX;
-                    } else {
-                        ttt.scoreO++;
-                        tttScoreO.textContent = ttt.scoreO;
-                    }
+            // Messages
+            const winMessage = () => `Player ${gameState.currentPlayer} Wins!`;
+            const drawMessage = () => `Game Ended in a Draw!`;
+            const currentPlayerTurn = () => `Player ${gameState.currentPlayer}'s Turn`;
+
+            // Initialize game
+            statusDisplay.textContent = currentPlayerTurn();
+
+            // Handle cell click
+            function handleCellClick(clickedCellEvent) {
+                const clickedCell = clickedCellEvent.target;
+                const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
+
+                // Check if cell is already played or game is inactive
+                if (gameState.board[clickedCellIndex] !== '' || !gameState.gameActive) {
                     return;
                 }
+
+                // Process the move
+                gameState.board[clickedCellIndex] = gameState.currentPlayer;
+                clickedCell.textContent = gameState.currentPlayer;
+                clickedCell.classList.add(gameState.currentPlayer.toLowerCase());
+
+                // Check for win or draw
+                if (checkWin()) {
+                    gameState.gameActive = false;
+                    statusDisplay.textContent = winMessage();
+                    updateScores(gameState.currentPlayer);
+                    highlightWinningCells();
+                    return;
+                }
+
+                if (checkDraw()) {
+                    gameState.gameActive = false;
+                    statusDisplay.textContent = drawMessage();
+                    updateScores('draw');
+                    return;
+                }
+
+                // Switch player
+                gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
+                statusDisplay.textContent = currentPlayerTurn();
             }
-            if (ttt.board.every(Boolean)) {
-                ttt.over = true;
-                tttStatus.textContent = 'Draw!';
-            }
-        }
 
-        document.getElementById('tttReset').addEventListener('click', () => {
-            ttt.board = Array(9).fill(null);
-            ttt.turn = 'X';
-            ttt.over = false;
-            tttTurnEl.textContent = 'X';
-            tttStatus.textContent = 'Make a move.';
-            drawTTT();
-        });
-
-        drawTTT();
-
-        // Full screen functionality
-        const tttFullscreen = document.getElementById('tttFullscreen');
-        const tttContainer = document.querySelector('.ttt-container');
-
-        tttFullscreen.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                tttContainer.requestFullscreen().catch(err => {
-                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+            // Check for win
+            function checkWin() {
+                return winningConditions.some(condition => {
+                    const [a, b, c] = condition;
+                    return gameState.board[a] &&
+                        gameState.board[a] === gameState.board[b] &&
+                        gameState.board[a] === gameState.board[c];
                 });
-                tttFullscreen.innerHTML = '⛷';
-            } else {
-                document.exitFullscreen();
-                tttFullscreen.innerHTML = '⛶';
             }
-        });
 
-        // Update icon when fullscreen changes
-        document.addEventListener('fullscreenchange', () => {
-            tttFullscreen.innerHTML = document.fullscreenElement ? '⛷' : '⛶';
+            // Check for draw
+            function checkDraw() {
+                return gameState.board.every(cell => cell !== '');
+            }
+
+            // Highlight winning cells
+            function highlightWinningCells() {
+                winningConditions.forEach(condition => {
+                    const [a, b, c] = condition;
+                    if (gameState.board[a] &&
+                        gameState.board[a] === gameState.board[b] &&
+                        gameState.board[a] === gameState.board[c]) {
+
+                        cells[a].classList.add('winning-cell');
+                        cells[b].classList.add('winning-cell');
+                        cells[c].classList.add('winning-cell');
+                    }
+                });
+            }
+
+            // Update scores
+            function updateScores(winner) {
+                if (winner === 'X') {
+                    gameState.scores.X++;
+                    scoreX.textContent = gameState.scores.X;
+                } else if (winner === 'O') {
+                    gameState.scores.O++;
+                    scoreO.textContent = gameState.scores.O;
+                } else {
+                    gameState.scores.draw++;
+                    scoreDraw.textContent = gameState.scores.draw;
+                }
+            }
+
+            // Restart game
+            function restartGame() {
+                gameState.board = ['', '', '', '', '', '', '', '', ''];
+                gameState.gameActive = true;
+                gameState.currentPlayer = 'X';
+                statusDisplay.textContent = currentPlayerTurn();
+
+                cells.forEach(cell => {
+                    cell.textContent = '';
+                    cell.classList.remove('x', 'o', 'winning-cell');
+                });
+            }
+
+            // Reset scores
+            function resetScores() {
+                gameState.scores = { X: 0, O: 0, draw: 0 };
+                scoreX.textContent = '0';
+                scoreO.textContent = '0';
+                scoreDraw.textContent = '0';
+                restartGame();
+            }
+
+            // Toggle fullscreen
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                    fullscreenButton.textContent = '⛶';
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                        fullscreenButton.textContent = '⛶';
+                    }
+                }
+            }
+
+            // Event listeners
+            cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+            restartButton.addEventListener('click', restartGame);
+            resetScoreButton.addEventListener('click', resetScores);
+            fullscreenButton.addEventListener('click', toggleFullscreen);
+
+            // Handle fullscreen change
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    fullscreenButton.textContent = '⛶';
+                }
+            });
         });
     </script>
 </body>
