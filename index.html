@@ -10,7 +10,7 @@
 </head>
 
 <body>
-    <header>
+    <header id="mainHeader">
         <div class="logo">
             <div class="logo-icon">🎮</div>
             <h1>GameHub</h1>
@@ -202,7 +202,13 @@
                     </a>
 
                     <a href="games/spaceshooter v2.html" class="game-card" data-category="arcade">
-                        <div class="game-icon">👾</div>
+                        <div class="game-header">
+                            <div class="game-icon">👾</div>
+                            <div class="platform-tags">
+                                <span class="platform-tag pc" title="Play on PC">💻</span>
+                                <span class="platform-tag mobile" title="Play on Mobile">📱</span>
+                            </div>
+                        </div>
                         <h3>spaceshooter v2</h3>
                         <p>Blast through alien fleets. v2</p>
                         <div class="game-categories">
@@ -272,6 +278,24 @@
     </footer>
 
     <script>
+
+        let lastScroll = 0;
+        const header = document.getElementById('mainHeader');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > lastScroll && currentScroll > 50) {
+                // Scrolling down
+                header.classList.add('hide');
+            } else {
+                // Scrolling up
+                header.classList.remove('hide');
+            }
+
+            lastScroll = currentScroll;
+        });
+
         function scrollToGames() {
             document.getElementById('games').scrollIntoView({
                 behavior: 'smooth'
