@@ -337,7 +337,7 @@
         const isShortObstacle = obstacleCount % 2 === 0;
 
         // Adjust gap size for shorter obstacles
-        const gap = isShortObstacle ? 180 + Math.random() * 40 : 140 + Math.random() * 40;
+        const gap = isShortObstacle ? 180 + Math.random() * 40 : 300 + Math.random() * 100;
 
         // Adjust vertical position range for shorter obstacles
         const gy = isShortObstacle ? rand(120, H - 120 - gap) : rand(100, H - 100 - gap);
