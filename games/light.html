@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze: Path of Light</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn-2 {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #4a90e2;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: Arial, sans-serif;
+        }
+
+        .back-btn-2:hover {
+            background: #357ae8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 15px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #334155;
+        }
+
+        .level-info,
+        .moves-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 2px solid #334155;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 120px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #475569, #64748b);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .instructions {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #334155;
+        }
+
+        .instructions h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #38bdf8;
+        }
+
+        .instructions p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .item-key {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #475569;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .light-source {
+            background: radial-gradient(circle, #fef08a, #f59e0b);
+        }
+
+        .light-target {
+            background: radial-gradient(circle, #86efac, #22c55e);
+        }
+
+        .mirror {
+            background: linear-gradient(45deg, #cbd5e1, #94a3b8);
+        }
+
+        .block {
+            background: linear-gradient(135deg, #475569, #334155);
+        }
+
+        .completed-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .completed-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .completed-message {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #22c55e;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .game-completed-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            border-radius: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .game-completed-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .game-completed-message {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .hint-path {
+            position: absolute;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .instructions {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Maze: Path of Light</h1>
+            <p class="subtitle">Guide the light through the maze using mirrors and avoid obstacles</p>
+        </header>
+
+        <div class="game-info">
+            <div class="level-info">
+                <div class="info-label">LEVEL</div>
+                <div class="info-value" id="level">1</div>
+            </div>
+            <div class="moves-info">
+                <div class="info-label">MOVES</div>
+                <div class="info-value" id="moves">0</div>
+            </div>
+        </div>
+        <a href="../index.html" class="back-btn-2">← Back</a>
+
+        <div class="game-container">
+            <canvas id="gameCanvas"></canvas>
+            <div class="completed-overlay" id="completedOverlay">
+                <div class="completed-message">Level Complete!</div>
+                <button class="btn btn-primary" id="nextLevelBtn">Next Level</button>
+            </div>
+            <div class="game-completed-overlay" id="gameCompletedOverlay">
+                <div class="game-completed-message">Game Completed!</div>
+                <p style="margin-bottom: 20px; text-align: center;">Congratulations! You've completed all levels.</p>
+                <button class="btn btn-primary" id="restartGameBtn">Play Again</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="resetBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16 15H8V13H16V15ZM16 11H8V9H16V11Z"
+                        fill="currentColor" />
+                </svg>
+                Reset Level
+            </button>
+            <button class="btn btn-primary" id="rotateBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M12 6V9L16 5L12 1V4C7.58 4 4 7.58 4 12C4 13.57 4.46 15.03 5.24 16.26L6.7 14.8C6.25 13.97 6 13.01 6 12C6 8.69 8.69 6 12 6ZM18.76 7.74L17.3 9.2C17.74 10.04 18 10.99 18 12C18 15.31 15.31 18 12 18V15L8 19L12 23V20C16.42 20 20 16.42 20 12C20 10.43 19.54 8.97 18.76 7.74Z"
+                        fill="currentColor" />
+                </svg>
+                Rotate Mirror
+            </button>
+            <button class="btn btn-secondary" id="hintBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M11 18H13V16H11V18ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 20 12 20C16.41 20 20 16.41 20 12C20 7.59 16.41 4 12 4ZM12 6C14.21 6 16 7.79 16 10C16 12.21 14.21 14 12 14C9.79 14 8 12.21 8 10C8 7.79 9.79 6 12 6ZM12 8C10.9 8 10 8.9 10 10C10 11.1 10.9 12 12 12C13.1 12 14 11.1 14 10C14 8.9 13.1 8 12 8Z"
+                        fill="currentColor" />
+                </svg>
+                Show Hint
+            </button>
+        </div>
+
+        <div class="instructions">
+            <h2>How to Play</h2>
+            <p>Guide the light beam from the source to the target using mirrors:</p>
+            <ul>
+                <li><span class="item-key light-source"></span> Light Source - Where the light starts</li>
+                <li><span class="item-key light-target"></span> Light Target - Where the light needs to go</li>
+                <li><span class="item-key mirror"></span> Mirror - Click to rotate, reflects light at 90° angles</li>
+                <li><span class="item-key block"></span> Block - Obstacle that stops the light</li>
+            </ul>
+            <p>Tap/click on mirrors to rotate them and redirect the light beam to the target.</p>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const levelElement = document.getElementById('level');
+        const movesElement = document.getElementById('moves');
+        const resetBtn = document.getElementById('resetBtn');
+        const rotateBtn = document.getElementById('rotateBtn');
+        const hintBtn = document.getElementById('hintBtn');
+        const nextLevelBtn = document.getElementById('nextLevelBtn');
+        const restartGameBtn = document.getElementById('restartGameBtn');
+        const completedOverlay = document.getElementById('completedOverlay');
+        const gameCompletedOverlay = document.getElementById('gameCompletedOverlay');
+
+        let currentLevel = 1;
+        let moves = 0;
+        let selectedMirror = null;
+        let gameState = {};
+        let lightPath = [];
+        let cellSize = 0;
+        const gridSize = 7;
+        let isShowingHint = false;
+        let hintTimeout = null;
+
+        // Game levels
+        const levels = [
+            // Level 1 - Simple introduction
+            {
+                source: { x: 0, y: 3, direction: { dx: 1, dy: 0 } },
+                target: { x: 6, y: 3 },
+                mirrors: [
+                    { x: 2, y: 3, rotation: 45 },
+                    { x: 2, y: 6, rotation: 0 },
+                    { x: 6, y: 6, rotation: 45 }
+
+                ],
+                blocks: [
+                    { x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 }
+                ]
+            },
+            // Level 2 - Multiple mirrors
+            {
+                source: { x: 0, y: 0, direction: { dx: 1, dy: 0 } },
+                target: { x: 6, y: 6 },
+                mirrors: [
+                    { x: 2, y: 2, rotation: 135 },
+                    { x: 2, y: 6, rotation: 45 },
+                    { x: 6, y: 0, rotation: 0 },
+                    { x: 6, y: 2, rotation: 0 }
+                ],
+                blocks: [
+                    { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 1 },
+                    { x: 5, y: 5 }, { x: 6, y: 5 }
+                ]
+            },
+            // Level 3 - Complex path
+            {
+                source: { x: 3, y: 0, direction: { dx: 1, dy: 0 } },
+                target: { x: 3, y: 6 },
+                mirrors: [
+                    { x: 6, y: 0, rotation: 0 },
+                    { x: 1, y: 2, rotation: 0 },
+                    { x: 6, y: 2, rotation: 0 },
+                    { x: 1, y: 4, rotation: 0 },
+                    { x: 5, y: 4, rotation: 45 },
+                    { x: 5, y: 6, rotation: 0 }
+                ],
+                blocks: [
+                    { x: 2, y: 1 }, { x: 4, y: 1 },
+                    { x: 2, y: 3 }, { x: 4, y: 3 },
+                    { x: 2, y: 5 }, { x: 3, y: 5 }, { x: 4, y: 5 }
+                ]
+            },
+            // Level 4 - More complex
+            {
+                source: { x: 0, y: 6, direction: { dx: 1, dy: 0 } },
+                target: { x: 6, y: 0 },
+                mirrors: [
+                    { x: 1, y: 6, rotation: 0 },
+                    { x: 1, y: 5, rotation: 0 },
+                    { x: 3, y: 3, rotation: 0 },
+                    { x: 5, y: 4, rotation: 0 },
+                    { x: 1, y: 2, rotation: 0 },
+                    { x: 5, y: 1, rotation: 0 },
+                    { x: 5, y: 5, rotation: 0 },
+                    { x: 6, y: 3, rotation: 0 },
+                    { x: 1, y: 3, rotation: 0 },
+                    { x: 1, y: 1, rotation: 0 },
+                    { x: 5, y: 0, rotation: 0 },
+                    { x: 1, y: 4, rotation: 0 },
+                    { x: 4, y: 4, rotation: 0 },
+                    { x: 4, y: 6, rotation: 0 },
+                    { x: 3, y: 5, rotation: 0 },
+                    { x: 4, y: 3, rotation: 0 }
+                ],
+                blocks: [
+                    { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 0 },
+                    { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 },
+                    { x: 5, y: 6 }, { x: 6, y: 5 }, { x: 6, y: 6 }
+                ]
+            },
+            // Level 5 - Final challenge
+            {
+                source: { x: 0, y: 3, direction: { dx: 1, dy: 0 } },
+                target: { x: 6, y: 6 },
+                mirrors: [
+                    { x: 1, y: 1, rotation: 135 },
+                    { x: 1, y: 5, rotation: 45 },
+                    { x: 3, y: 2, rotation: 45 },
+                    { x: 3, y: 4, rotation: 135 },
+                    { x: 5, y: 1, rotation: 45 },
+                    { x: 5, y: 5, rotation: 135 },
+                    { x: 6, y: 3, rotation: 0 }
+                ],
+                blocks: [
+                    { x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 },
+                    { x: 2, y: 4 }, { x: 2, y: 5 }, { x: 2, y: 6 },
+                    { x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 },
+                    { x: 4, y: 4 }, { x: 4, y: 5 }, { x: 4, y: 6 }
+                ]
+            }
+        ];
+
+        // Initialize game
+        function initGame() {
+            resizeCanvas();
+            loadLevel(currentLevel);
+            drawGame();
+
+            // Event listeners
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('click', handleCanvasClick);
+            resetBtn.addEventListener('click', resetLevel);
+            rotateBtn.addEventListener('click', rotateSelectedMirror);
+            hintBtn.addEventListener('click', showHint);
+            nextLevelBtn.addEventListener('click', nextLevel);
+            restartGameBtn.addEventListener('click', restartGame);
+
+            // Initial draw
+            drawGame();
+        }
+
+        // Resize canvas to fit container
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            cellSize = Math.min(canvas.width, canvas.height) / gridSize;
+            drawGame();
+        }
+
+        // Load level data
+        function loadLevel(levelNum) {
+            const level = levels[levelNum - 1];
+            if (!level) {
+                showGameCompleted();
+                return;
+            }
+
+            gameState = {
+                source: { ...level.source },
+                target: { ...level.target },
+                mirrors: level.mirrors.map(mirror => ({ ...mirror })),
+                blocks: level.blocks.map(block => ({ ...block }))
+            };
+
+            moves = 0;
+            movesElement.textContent = moves;
+            levelElement.textContent = currentLevel;
+            selectedMirror = null;
+            isShowingHint = false;
+
+            if (hintTimeout) {
+                clearTimeout(hintTimeout);
+                hintTimeout = null;
+            }
+
+            calculateLightPath();
+        }
+
+        // Calculate the path of light with proper reflection physics
+        function calculateLightPath() {
+            lightPath = [];
+            const visited = new Set();
+            let x = gameState.source.x;
+            let y = gameState.source.y;
+            let dx = gameState.source.direction.dx;
+            let dy = gameState.source.direction.dy;
+
+            // Add starting point
+            lightPath.push({ x, y, dx, dy });
+
+            // Follow the light path
+            while (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+                // Check if we've reached the target
+                if (x === gameState.target.x && y === gameState.target.y) {
+                    break;
+                }
+
+                // Check for mirrors
+                const mirror = gameState.mirrors.find(m => m.x === x && m.y === y);
+                if (mirror) {
+                    // Calculate reflection based on mirror rotation
+                    const reflection = calculateReflection(dx, dy, mirror.rotation);
+                    dx = reflection.dx;
+                    dy = reflection.dy;
+                }
+
+                // Check for blocks
+                const block = gameState.blocks.find(b => b.x === x && b.y === y);
+                if (block) {
+                    // Light is blocked, stop the path
+                    break;
+                }
+
+                // Move to next cell
+                x += dx;
+                y += dy;
+
+                // Check if we're in a loop
+                const cellKey = `${x},${y},${dx},${dy}`;
+                if (visited.has(cellKey)) {
+                    // We're in a loop, stop the path
+                    break;
+                }
+                visited.add(cellKey);
+
+                // Add point to path
+                if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+                    lightPath.push({ x, y, dx, dy });
+                }
+            }
+
+            // Check if we reached the target
+            checkWinCondition();
+        }
+
+        // Calculate reflection based on mirror angle
+        function calculateReflection(dx, dy, mirrorRotation) {
+            // For 45 degree mirror (like /)
+            if (mirrorRotation === 45) {
+                // Swap dx and dy and negate one of them
+                return { dx: -dy, dy: -dx };
+            }
+            // For 135 degree mirror (like \)
+            else if (mirrorRotation === 135) {
+                // Swap dx and dy
+                return { dx: dy, dy: dx };
+            }
+            // Default case (shouldn't happen with current implementation)
+            return { dx, dy };
+        }
+
+        // Check if the level is completed
+        function checkWinCondition() {
+            const lastPoint = lightPath[lightPath.length - 1];
+            const reachedTarget = lastPoint &&
+                lastPoint.x === gameState.target.x &&
+                lastPoint.y === gameState.target.y;
+
+            if (reachedTarget) {
+                // Level completed!
+                setTimeout(() => {
+                    completedOverlay.classList.add('show');
+                }, 500);
+            }
+
+            return reachedTarget;
+        }
+
+        // Draw the game
+        function drawGame() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid background
+            drawGrid();
+
+            // Draw blocks
+            if (gameState.blocks) {
+                gameState.blocks.forEach(block => {
+                    drawBlock(block.x, block.y);
+                });
+            }
+
+            // Draw mirrors
+            if (gameState.mirrors) {
+                gameState.mirrors.forEach(mirror => {
+                    drawMirror(mirror.x, mirror.y, mirror.rotation, mirror === selectedMirror);
+                });
+            }
+
+            // Draw light path
+            drawLightPath();
+
+            // Draw source and target
+            if (gameState.source) {
+                drawSource(gameState.source.x, gameState.source.y);
+            }
+            if (gameState.target) {
+                drawTarget(gameState.target.x, gameState.target.y);
+            }
+        }
+
+        // Draw grid background
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(100, 116, 139, 0.2)';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i <= gridSize; i++) {
+                // Vertical lines
+                ctx.beginPath();
+                ctx.moveTo(i * cellSize, 0);
+                ctx.lineTo(i * cellSize, canvas.height);
+                ctx.stroke();
+
+                // Horizontal lines
+                ctx.beginPath();
+                ctx.moveTo(0, i * cellSize);
+                ctx.lineTo(canvas.width, i * cellSize);
+                ctx.stroke();
+            }
+        }
+
+        // Draw a block
+        function drawBlock(x, y) {
+            const centerX = x * cellSize + cellSize / 2;
+            const centerY = y * cellSize + cellSize / 2;
+            const size = cellSize * 0.8;
+
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(centerX - size / 2, centerY - size / 2, size, size);
+
+            // Add a subtle 3D effect
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(centerX - size / 2, centerY - size / 2, size, size);
+        }
+
+        // Draw a mirror
+        function drawMirror(x, y, rotation, isSelected) {
+            const centerX = x * cellSize + cellSize / 2;
+            const centerY = y * cellSize + cellSize / 2;
+            const length = cellSize * 0.9;
+            const width = cellSize * 0.15;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation * Math.PI / 180);
+
+            // Mirror surface with gradient
+            const gradient = ctx.createLinearGradient(-length / 2, 0, length / 2, 0);
+            gradient.addColorStop(0, '#cbd5e1');
+            gradient.addColorStop(0.5, '#f8fafc');
+            gradient.addColorStop(1, '#cbd5e1');
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(-length / 2, -width / 2, length, width);
+
+            // Mirror frame
+            ctx.strokeStyle = isSelected ? '#38bdf8' : '#64748b';
+            ctx.lineWidth = isSelected ? 3 : 2;
+            ctx.strokeRect(-length / 2, -width / 2, length, width);
+
+            // Add selection indicator
+            if (isSelected) {
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(0, 0, cellSize * 0.4, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            ctx.restore();
+        }
+
+        // Draw the light source
+        function drawSource(x, y) {
+            const centerX = x * cellSize + cellSize / 2;
+            const centerY = y * cellSize + cellSize / 2;
+            const radius = cellSize * 0.3;
+
+            // Light glow effect
+            const gradient = ctx.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, radius * 2
+            );
+            gradient.addColorStop(0, 'rgba(254, 240, 138, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.4)');
+            gradient.addColorStop(1, 'rgba(245, 158, 11, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Light source core
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner glow
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw direction indicator
+            const direction = gameState.source.direction;
+            const arrowLength = cellSize * 0.4;
+            const arrowX = centerX + direction.dx * arrowLength;
+            const arrowY = centerY + direction.dy * arrowLength;
+
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(arrowX, arrowY);
+            ctx.stroke();
+
+            // Draw arrowhead
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            const angle = Math.atan2(direction.dy, direction.dx);
+            ctx.translate(arrowX, arrowY);
+            ctx.rotate(angle);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-cellSize * 0.15, -cellSize * 0.1);
+            ctx.lineTo(-cellSize * 0.15, cellSize * 0.1);
+            ctx.closePath();
+            ctx.fill();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
+        // Draw the light target
+        function drawTarget(x, y) {
+            const centerX = x * cellSize + cellSize / 2;
+            const centerY = y * cellSize + cellSize / 2;
+            const radius = cellSize * 0.35;
+
+            // Target outer ring
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Target inner circle
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pulsing glow effect
+            const pulse = (Date.now() % 1000) / 1000;
+            const pulseRadius = radius + pulse * 10;
+            const alpha = 0.5 * (1 - pulse);
+
+            ctx.fillStyle = `rgba(34, 197, 94, ${alpha})`;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw the light path
+        function drawLightPath() {
+            if (lightPath.length < 2) return;
+
+            // Draw the path with a glowing effect
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = cellSize * 0.1;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = '#f59e0b';
+            ctx.shadowBlur = 10;
+
+            ctx.beginPath();
+            ctx.moveTo(
+                lightPath[0].x * cellSize + cellSize / 2,
+                lightPath[0].y * cellSize + cellSize / 2
+            );
+
+            for (let i = 1; i < lightPath.length; i++) {
+                ctx.lineTo(
+                    lightPath[i].x * cellSize + cellSize / 2,
+                    lightPath[i].y * cellSize + cellSize / 2
+                );
+            }
+
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Draw arrowheads at direction changes
+            for (let i = 1; i < lightPath.length - 1; i++) {
+                const point = lightPath[i];
+                const nextPoint = lightPath[i + 1];
+
+                // Check if direction changed
+                if (point.dx !== nextPoint.dx || point.dy !== nextPoint.dy) {
+                    const centerX = point.x * cellSize + cellSize / 2;
+                    const centerY = point.y * cellSize + cellSize / 2;
+
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    const angle = Math.atan2(point.dy, point.dx);
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(angle);
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-cellSize * 0.15, -cellSize * 0.1);
+                    ctx.lineTo(-cellSize * 0.15, cellSize * 0.1);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                }
+            }
+        }
+
+        // Handle canvas click
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const gridX = Math.floor(x / cellSize);
+            const gridY = Math.floor(y / cellSize);
+
+            // Check if a mirror was clicked
+            if (gameState.mirrors) {
+                const clickedMirror = gameState.mirrors.find(mirror =>
+                    mirror.x === gridX && mirror.y === gridY
+                );
+
+                if (clickedMirror) {
+                    selectedMirror = clickedMirror;
+                    rotateMirror(clickedMirror);
+                } else {
+                    selectedMirror = null;
+                }
+                drawGame();
+            }
+        }
+
+        // Rotate a mirror
+        function rotateMirror(mirror) {
+            mirror.rotation = mirror.rotation === 45 ? 135 : 45;
+            moves++;
+            movesElement.textContent = moves;
+            calculateLightPath();
+            drawGame();
+        }
+
+        // Rotate the selected mirror
+        function rotateSelectedMirror() {
+            if (selectedMirror) {
+                rotateMirror(selectedMirror);
+            } else {
+                alert("Please select a mirror first by clicking on it");
+            }
+        }
+
+        // Reset the current level
+        function resetLevel() {
+            loadLevel(currentLevel);
+            drawGame();
+        }
+
+        // Show a hint
+        function showHint() {
+            if (isShowingHint) return;
+
+            isShowingHint = true;
+
+            // Store current state
+            const originalMirrors = gameState.mirrors.map(mirror => ({ ...mirror }));
+
+            // Try to find a solution by testing different mirror configurations
+            let solutionFound = false;
+
+            // Simple hint: show the correct path for 2 seconds
+            const hintPath = [...lightPath];
+
+            // Draw the hint path in a different color
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = cellSize * 0.08;
+            ctx.lineCap = 'round';
+            ctx.setLineDash([5, 5]);
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = 15;
+
+            ctx.beginPath();
+            ctx.moveTo(
+                hintPath[0].x * cellSize + cellSize / 2,
+                hintPath[0].y * cellSize + cellSize / 2
+            );
+
+            for (let i = 1; i < hintPath.length; i++) {
+                ctx.lineTo(
+                    hintPath[i].x * cellSize + cellSize / 2,
+                    hintPath[i].y * cellSize + cellSize / 2
+                );
+            }
+
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
+
+            // Reset after 2 seconds
+            hintTimeout = setTimeout(() => {
+                isShowingHint = false;
+                drawGame();
+            }, 2000);
+        }
+
+        // Go to the next level
+        function nextLevel() {
+            completedOverlay.classList.remove('show');
+            currentLevel++;
+            loadLevel(currentLevel);
+            drawGame();
+        }
+
+        // Show game completed screen
+        function showGameCompleted() {
+            gameCompletedOverlay.classList.add('show');
+        }
+
+        // Restart the game
+        function restartGame() {
+            gameCompletedOverlay.classList.remove('show');
+            currentLevel = 1;
+            loadLevel(currentLevel);
+            drawGame();
+        }
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+
+</html>

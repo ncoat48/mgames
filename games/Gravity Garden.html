@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Gravity Garden (Easier Version)</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: linear-gradient(135deg, #0b2740 0%, #1a4a6a 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+      color: #fff;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .back-btn-2 {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      padding: 8px 16px;
+      font-size: 14px;
+      background: #4a90e2;
+      border: none;
+      border-radius: 20px;
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      font-family: Arial, sans-serif;
+    }
+
+    .back-btn-2:hover {
+      background: #357ae8;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    canvas {
+      background: linear-gradient(135deg, #a8f7c5 0%, #60ce8d 100%);
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      touch-action: none;
+    }
+
+    .ui {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 18px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px 15px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    .ui .score {
+      font-weight: 700;
+      font-size: 22px;
+      color: #fffaad;
+    }
+
+    .hint {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 15px;
+      opacity: .9;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px;
+      margin: 0 20px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    .game-over {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .game-over.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .game-over h2 {
+      font-size: 42px;
+      margin-bottom: 10px;
+      color: #fffaad;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-over .final-score {
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
+
+    .game-over button {
+      background: #60ce8d;
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      font-size: 18px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .game-over button:hover {
+      background: #7ecf88;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .game-over button:active {
+      transform: translateY(0);
+    }
+
+    .boost-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px 15px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .boost-bar {
+      width: 100px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .boost-fill {
+      height: 100%;
+      width: 0%;
+      background: #fffaad;
+      border-radius: 4px;
+      transition: width 0.1s;
+    }
+
+    .instructions {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 400px;
+      backdrop-filter: blur(10px);
+      z-index: 20;
+    }
+
+    .instructions h3 {
+      margin-top: 0;
+      color: #fffaad;
+    }
+
+    .instructions button {
+      background: #60ce8d;
+      border: none;
+      color: white;
+      padding: 10px 25px;
+      font-size: 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrap">
+    <canvas id="c" width="480" height="768"></canvas>
+  </div>
+
+  <div class="ui">Score: <span id="score">0</span></div>
+  <div class="boost-indicator">
+    <span>Boost:</span>
+    <div class="boost-bar">
+      <div class="boost-fill" id="boost-fill"></div>
+    </div>
+  </div>
+  <div> <a href="../index.html" class="back-btn-2">← Back</a>
+  </div>
+  <div class="hint">Tap / Hold / Space = flip & boost gravity</div>
+
+  <div class="game-over" id="game-over">
+    <h2>Game Over</h2>
+    <div class="final-score">Score: <span id="final-score">0</span></div>
+    <button id="restart-btn">Play Again</button>
+  </div>
+
+  <div class="instructions" id="instructions">
+    <h3>Gravity Garden (Easier Version)</h3>
+    <p>Tap or press Space to flip gravity direction.</p>
+    <p>Hold to boost gravity for faster movement.</p>
+    <p>Avoid obstacles and collect yellow orbs for points!</p>
+    <p><strong>Note:</strong> Every second obstacle is shorter to make the game easier.</p>
+    <button id="start-btn">Start Game</button>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('c');
+      const ctx = canvas.getContext('2d');
+      let W = canvas.width, H = canvas.height;
+
+      // UI Elements
+      const scoreEl = document.getElementById('score');
+      const finalScoreEl = document.getElementById('final-score');
+      const gameOverEl = document.getElementById('game-over');
+      const restartBtn = document.getElementById('restart-btn');
+      const instructionsEl = document.getElementById('instructions');
+      const startBtn = document.getElementById('start-btn');
+      const boostFillEl = document.getElementById('boost-fill');
+
+      // Game state
+      let running = false, gravityDown = true, time = 0, spawnT = 0, spd = 110;
+      let ob = [], fl = [], particles = [];
+      let score = 0, highScore = localStorage.getItem('gravityGardenHighScore') || 0;
+      let boostTime = 0, maxBoostTime = 3, boostCooldown = 0;
+
+      // Track obstacle count for alternating height
+      let obstacleCount = 0;
+
+      // Player
+      const p = { x: W * 0.22, y: H / 2, r: 16, vy: 0 };
+      let holding = false;
+
+      // Resize handling
+      function resize() {
+        const scale = Math.min(window.innerWidth / 480, window.innerHeight / 768);
+        canvas.style.width = 480 * scale + 'px';
+        canvas.style.height = 768 * scale + 'px';
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // --- Input handling ---
+      function flip() {
+        if (!running) return;
+        gravityDown = !gravityDown;
+        p.vy = gravityDown ? 100 : -100;
+
+        // Add flip particles
+        for (let i = 0; i < 8; i++) {
+          particles.push({
+            x: p.x,
+            y: p.y,
+            vx: (Math.random() - 0.5) * 150,
+            vy: (Math.random() - 0.5) * 150,
+            life: 0.5,
+            color: gravityDown ? '#a8f7c5' : '#60ce8d'
+          });
+        }
+      }
+
+      function pressStart() {
+        if (!running) return;
+        holding = true;
+      }
+
+      function pressEnd() {
+        holding = false;
+      }
+
+      canvas.addEventListener('click', flip);
+      canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        flip();
+        pressStart();
+      }, { passive: false });
+      canvas.addEventListener('touchend', pressEnd);
+      canvas.addEventListener('mousedown', pressStart);
+      canvas.addEventListener('mouseup', pressEnd);
+
+      window.addEventListener('keydown', e => {
+        if (e.code === 'Space') {
+          if (!holding && running) flip();
+          holding = true;
+          e.preventDefault();
+        }
+        if (e.key === 'r' && !running) reset();
+      });
+      window.addEventListener('keyup', e => {
+        if (e.code === 'Space') holding = false;
+      });
+
+      // --- Utility ---
+      function rand(a, b) { return Math.random() * (b - a) + a; }
+
+      function circRect(cx, cy, cr, rx, ry, rw, rh) {
+        const nx = Math.max(rx, Math.min(cx, rx + rw));
+        const ny = Math.max(ry, Math.min(cy, ry + rh));
+        const dx = cx - nx, dy = cy - ny;
+        return dx * dx + dy * dy <= cr * cr;
+      }
+
+      function spawn() {
+        obstacleCount++;
+
+        // Every second obstacle is shorter
+        const isShortObstacle = obstacleCount % 2 === 0;
+
+        // Adjust gap size for shorter obstacles
+        const gap = isShortObstacle ? 180 + Math.random() * 40 : 140 + Math.random() * 40;
+
+        // Adjust vertical position range for shorter obstacles
+        const gy = isShortObstacle ? rand(120, H - 120 - gap) : rand(100, H - 100 - gap);
+
+        ob.push({
+          x: W + 40,
+          w: 44,
+          gY: gy,
+          gap,
+          isShort: isShortObstacle  // Mark if this is a shorter obstacle
+        });
+
+        // Spawn collectibles with some probability
+        if (Math.random() < 0.7) {
+          fl.push({
+            x: W + 60,
+            y: gy + gap / 2,
+            r: 9,
+            collected: false,
+            pulse: 0
+          });
+        }
+      }
+
+      // --- Main loop ---
+      let last = performance.now();
+      function loop(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+
+        if (!running) {
+          draw();
+          return requestAnimationFrame(loop);
+        }
+
+        time += dt;
+        spd = 110 + Math.floor(time / 6) * 8;
+
+        // Boost management
+        if (boostCooldown > 0) {
+          boostCooldown -= dt;
+        }
+
+        if (holding && boostTime < maxBoostTime && boostCooldown <= 0) {
+          boostTime += dt;
+        } else if (!holding && boostTime > 0) {
+          boostTime -= dt * 0.5;
+        }
+
+        // Update boost UI
+        boostFillEl.style.width = `${(boostTime / maxBoostTime) * 100}%`;
+
+        // Gravity with boost
+        const gBase = gravityDown ? 300 : -300;
+        const boostMultiplier = holding && boostTime > 0 ? 1.8 : 1;
+        const g = gBase * boostMultiplier;
+
+        // If boost depleted, start cooldown
+        if (boostTime >= maxBoostTime && holding) {
+          boostCooldown = 1.5;
+        }
+
+        p.vy += g * dt;
+        p.y += p.vy * dt;
+
+        // Clamp position
+        if (p.y < p.r) { p.y = p.r; p.vy = 0; }
+        if (p.y > H - p.r) { p.y = H - p.r; p.vy = 0; }
+
+        // Update obstacles and collectibles
+        for (let o of ob) { o.x -= spd * dt; }
+        for (let f of fl) {
+          f.x -= spd * dt;
+          f.pulse = (f.pulse + dt * 5) % (Math.PI * 2);
+        }
+
+        // Update particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const part = particles[i];
+          part.x += part.vx * dt;
+          part.y += part.vy * dt;
+          part.life -= dt;
+
+          if (part.life <= 0) {
+            particles.splice(i, 1);
+          }
+        }
+
+        // Remove off-screen objects
+        ob = ob.filter(o => o.x > -60);
+        fl = fl.filter(f => f.x > -60);
+
+        // Collision detection
+        for (let o of ob) {
+          if (circRect(p.x, p.y, p.r, o.x, 0, o.w, o.gY) ||
+            circRect(p.x, p.y, p.r, o.x, o.gY + o.gap, o.w, H - (o.gY + o.gap))) {
+            gameOver();
+            return;
+          }
+
+          if (!o.scored && o.x + o.w < p.x) {
+            o.scored = true;
+            score += 10;
+            scoreEl.textContent = score;
+          }
+        }
+
+        // Collectibles
+        for (let f of fl) {
+          if (!f.collected && Math.hypot(f.x - p.x, f.y - p.y) < p.r + f.r) {
+            f.collected = true;
+            score += 5;
+            scoreEl.textContent = score;
+            p.vy += gravityDown ? -90 : 90;
+
+            // Add collection particles
+            for (let i = 0; i < 12; i++) {
+              particles.push({
+                x: f.x,
+                y: f.y,
+                vx: (Math.random() - 0.5) * 200,
+                vy: (Math.random() - 0.5) * 200,
+                life: 0.7,
+                color: '#fffaad'
+              });
+            }
+          }
+        }
+
+        // Spawn obstacles
+        spawnT -= dt;
+        if (spawnT <= 0) {
+          spawn();
+          spawnT = 1.1 - Math.min(0.5, time / 60); // Gradually decrease spawn time
+        }
+
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      // --- Drawing ---
+      function draw() {
+        // Clear canvas with gradient
+        ctx.clearRect(0, 0, W, H);
+
+        // Draw background elements
+        drawBackground();
+
+        // Draw ground
+        ctx.fillStyle = '#7ecf88';
+        ctx.fillRect(0, H - 60, W, 60);
+
+        // Draw grass details
+        ctx.fillStyle = '#5aa86d';
+        for (let i = 0; i < W; i += 20) {
+          ctx.fillRect(i, H - 60, 10, 10);
+        }
+
+        // Draw obstacles
+        for (let o of ob) {
+          // Color shorter obstacles differently to make them visually distinct
+          ctx.fillStyle = o.isShort ? '#1a7e3e' : '#155c30';
+          roundRect(ctx, o.x, 0, o.w, o.gY, 8);
+          roundRect(ctx, o.x, o.gY + o.gap, o.w, H - (o.gY + o.gap), 8);
+
+          // Add some texture to obstacles
+          ctx.fillStyle = o.isShort ? '#0e5c2d' : '#0e4523';
+          ctx.fillRect(o.x + 5, o.gY - 15, o.w - 10, 5);
+          ctx.fillRect(o.x + 5, o.gY + o.gap + 10, o.w - 10, 5);
+        }
+
+        // Draw collectibles
+        for (let f of fl) {
+          if (f.collected) continue;
+
+          // Pulsing effect
+          const pulseSize = 1 + Math.sin(f.pulse) * 0.2;
+
+          ctx.fillStyle = '#fffaad';
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.r * pulseSize, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Shine effect
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.beginPath();
+          ctx.arc(f.x - f.r / 3, f.y - f.r / 3, f.r / 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Draw particles
+        for (let part of particles) {
+          const alpha = part.life / 0.5; // Fade out
+          ctx.fillStyle = part.color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+          ctx.beginPath();
+          ctx.arc(part.x, part.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Draw player
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.vy * 0.003);
+
+        // Player body
+        ctx.fillStyle = '#e8c47a';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.r, p.r + 4, Math.PI / 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Player inner
+        ctx.fillStyle = '#3a2b12';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.r - 2, p.r + 2, Math.PI / 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Player eye
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(4, -4, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(5, -4, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Show boost indicator
+        if (holding && boostTime > 0 && boostCooldown <= 0) {
+          const boostSize = p.r * (2.2 + Math.sin(time * 10) * 0.2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, boostSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Show boost cooldown
+        if (boostCooldown > 0) {
+          ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function drawBackground() {
+        // Draw clouds
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        for (let i = 0; i < 5; i++) {
+          const x = (time * 20 + i * 100) % (W + 200) - 100;
+          const y = 80 + i * 40;
+          const size = 30 + i * 5;
+
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.arc(x + size * 0.8, y, size * 0.8, 0, Math.PI * 2);
+          ctx.arc(x - size * 0.8, y, size * 0.8, 0, Math.PI * 2);
+          ctx.arc(x, y - size * 0.5, size * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function roundRect(c, x, y, w, h, r) {
+        c.beginPath();
+        c.moveTo(x + r, y);
+        c.arcTo(x + w, y, x + w, y + h, r);
+        c.arcTo(x + w, y + h, x, y + h, r);
+        c.arcTo(x, y + h, x, y, r);
+        c.arcTo(x, y, x + w, y, r);
+        c.closePath();
+        c.fill();
+      }
+
+      function gameOver() {
+        running = false;
+
+        // Update high score
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('gravityGardenHighScore', highScore);
+        }
+
+        finalScoreEl.textContent = `${score} (Best: ${highScore})`;
+        gameOverEl.classList.add('active');
+      }
+
+      function reset() {
+        running = true;
+        time = 0;
+        spawnT = 0.6;
+        ob = [];
+        fl = [];
+        particles = [];
+        score = 0;
+        boostTime = 0;
+        boostCooldown = 0;
+        obstacleCount = 0; // Reset obstacle count
+
+        p.x = W * 0.22;
+        p.y = H / 2;
+        p.vy = 0;
+        gravityDown = true;
+
+        scoreEl.textContent = score;
+        gameOverEl.classList.remove('active');
+
+        last = performance.now();
+        requestAnimationFrame(loop);
+      }
+
+      // Start game when instructions are dismissed
+      startBtn.addEventListener('click', () => {
+        instructionsEl.style.display = 'none';
+        reset();
+      });
+
+      restartBtn.addEventListener('click', reset);
+
+      // Initial setup
+      instructionsEl.style.display = 'block';
+    })();
+  </script>
+</body>
+
+</html>
