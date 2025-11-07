@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fruit Crush</title>
+    <!-- Using Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        :root {
+            --grid-size: 8;
+            --tile-size: 50px;
+            /* Base size for tiles */
+            --gap-size: 5px;
+
+            /* Responsive adjustments */
+            @media (max-width: 600px) {
+                --tile-size: 40px;
+                --gap-size: 4px;
+            }
+
+            @media (max-width: 400px) {
+                --tile-size: 35px;
+                --gap-size: 3px;
+            }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+            overflow: hidden;
+            /* Prevent scrollbars during animations */
+        }
+
+        /* Game container styling */
+        .game-container {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        h1 {
+            color: #4a4a4a;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        /* Scoreboard styling */
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+
+        .scoreboard-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .scoreboard-item span:first-child {
+            font-size: 14px;
+            color: #777;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .scoreboard-item span:last-child {
+            font-size: 24px;
+            color: #333;
+            font-weight: 700;
+        }
+
+        /* Game board styling */
+        #game-board {
+            display: grid;
+            /* Using CSS variables to set grid properties */
+            grid-template-columns: repeat(var(--grid-size), var(--tile-size));
+            grid-template-rows: repeat(var(--grid-size), var(--tile-size));
+            gap: var(--gap-size);
+            background: #d0d8ff;
+            padding: var(--gap-size);
+            border-radius: 8px;
+            border: 3px solid #b4c0e8;
+            position: relative;
+            /* Prevent user from selecting emoji text */
+            user-select: none;
+            touch-action: none;
+            /* Prevent browser touch actions */
+        }
+
+        /* Candy tile styling */
+        .candy {
+            width: var(--tile-size);
+            height: var(--tile-size);
+            font-size: calc(var(--tile-size) * 0.6);
+            /* Responsive font size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            animation: spawn 0.4s ease-out;
+            /* All candies spawn with this */
+            will-change: transform;
+            /* Performance hint */
+        }
+
+        /* Selected candy effect */
+        .candy.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(50, 50, 255, 0.7);
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+
+        /* Valid swap target effect */
+        .candy.valid-target {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(50, 200, 50, 0.7);
+        }
+
+        /* Invalid swap target effect */
+        .candy.invalid-target {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 50, 50, 0.7);
+        }
+
+        /* Animation for swapping candies */
+        .candy.swapping {
+            animation: swap 0.3s ease-out forwards;
+            z-index: 5;
+        }
+
+        @keyframes swap {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Animation for popping candies */
+        .candy.pop {
+            animation: pop 0.3s ease-out forwards;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Animation for new candies falling in */
+        @keyframes spawn {
+            0% {
+                transform: translateY(-50px) scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Animation for falling candies */
+        .candy.falling {
+            animation: fall 0.3s ease-out forwards;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        /* Restart button styling */
+        #restart-button {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(45deg, #6d5dfc, #8b54f1);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(109, 93, 252, 0.4);
+        }
+
+        #restart-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(109, 93, 252, 0.5);
+        }
+
+        #restart-button:active {
+            transform: translateY(1px);
+        }
+
+        /* Message box for alerts */
+        #message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background-color: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #message-box.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Game over overlay */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .back-btn-2 {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #4a90e2;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: Arial, sans-serif;
+        }
+
+        .back-btn-2:hover {
+            background: #357ae8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .game-over h2 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .game-over p {
+            color: #ddd;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="game-container">
+        <h1>Candy Crush</h1>
+
+        <div class="scoreboard">
+            <div class="scoreboard-item">
+                <span>Score</span>
+                <span id="score">0</span>
+            </div>
+            <div class="scoreboard-item">
+                <span>Moves</span>
+                <span id="moves">30</span>
+            </div>
+        </div>
+
+        <!-- The game board will be populated by JavaScript -->
+        <div id="game-board"></div>
+
+        <button id="restart-button">Restart Game</button>
+
+        <!-- Game over overlay -->
+        <div class="game-over" id="game-over">
+            <h2>Game Over!</h2>
+            <p id="final-message"></p>
+            <button id="play-again-button">Play Again</button>
+        </div>
+    </div>
+    <a href="../index.html" class="back-btn-2">← Back</a>
+
+    <!-- Message box for custom alerts -->
+    <div id="message-box"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ROWS = 8;
+            const COLS = 8;
+            // Using emojis as candies for a fun, asset-free look
+            const CANDY_TYPES = ['🍓', '🍒', '🍇', '🍊', '🍋', '🥥'];
+            const MAX_MOVES = 30;
+
+            let board = [];
+            let score = 0;
+            let moves = MAX_MOVES;
+            let dragStartCandy = null;
+            let isProcessing = false;
+            let currentDragTarget = null;
+
+            // DOM elements
+            const gameBoard = document.getElementById('game-board');
+            const scoreElement = document.getElementById('score');
+            const movesElement = document.getElementById('moves');
+            const messageBox = document.getElementById('message-box');
+            const restartButton = document.getElementById('restart-button');
+            const gameOver = document.getElementById('game-over');
+            const finalMessage = document.getElementById('final-message');
+            const playAgainButton = document.getElementById('play-again-button');
+
+            /**
+             * Initializes the game, creates the board, and sets up listeners.
+             */
+            function initGame() {
+                score = 0;
+                moves = MAX_MOVES;
+                isProcessing = false;
+                dragStartCandy = null;
+                currentDragTarget = null;
+                updateScore(0);
+                updateMoves(0);
+                gameOver.classList.remove('show');
+
+                // Set CSS variables for grid size
+                gameBoard.style.setProperty('--grid-size', ROWS);
+
+                createBoard();
+                renderBoard();
+
+                // Add event listeners
+                restartButton.addEventListener('click', initGame);
+                playAgainButton.addEventListener('click', initGame);
+
+                // Use event delegation for swipe/drag controls
+                gameBoard.addEventListener('mousedown', handleDragStart);
+                gameBoard.addEventListener('touchstart', handleDragStart, { passive: false });
+
+                document.addEventListener('mousemove', handleDragMove);
+                document.addEventListener('touchmove', handleDragMove, { passive: false });
+
+                document.addEventListener('mouseup', handleDragEnd);
+                document.addEventListener('touchend', handleDragEnd);
+            }
+
+            /**
+             * Creates the 2D array for the board.
+             * Ensures no matches are present on the initial board.
+             */
+            function createBoard() {
+                board = [];
+                do {
+                    board = [];
+                    for (let r = 0; r < ROWS; r++) {
+                        board[r] = [];
+                        for (let c = 0; c < COLS; c++) {
+                            board[r][c] = getRandomCandy();
+                        }
+                    }
+                } while (checkAllMatches().length > 0); // Keep making new boards until one is match-free
+            }
+
+            /**
+             * Renders the current state of the board array as HTML elements.
+             */
+            function renderBoard() {
+                gameBoard.innerHTML = ''; // Clear existing board
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        if (board[r][c]) {
+                            const candy = document.createElement('div');
+                            candy.classList.add('candy');
+                            candy.innerText = board[r][c];
+                            candy.dataset.row = r;
+                            candy.dataset.col = c;
+                            gameBoard.appendChild(candy);
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Updates only specific positions on the board
+             */
+            /**
+         * Updates only specific positions on the board
+         */
+            function updateBoardPositions(positions) {
+                for (const { r, c } of positions) {
+                    const candy = gameBoard.querySelector(`.candy[data-row="${r}"][data-col="${c}"]`);
+
+                    // This 'candy' element will always exist since we render it once
+                    if (candy) {
+                        if (board[r][c]) {
+                            // CASE 1: This spot (r, c) NOW has a candy.
+                            // It either fell here or is newly spawned.
+                            candy.innerText = board[r][c];
+
+                            // *** THE FIX ***
+                            // Remove all old animation classes so it's visible again
+                            candy.classList.remove('pop', 'falling', 'swapping');
+
+                            // Add the spawn animation
+                            candy.classList.add('spawn');
+                        } else {
+                            // CASE 2: This spot (r, c) is NOW null.
+                            // This is an empty spot a candy fell *from*.
+                            candy.innerText = ''; // Clear the emoji
+                            // Reset all animations
+                            candy.classList.remove('pop', 'falling', 'swapping', 'spawn');
+                        }
+                    }
+                    // The original 'else if (board[r][c])' block was unnecessary
+                    // because the DOM elements are never removed, only hidden.
+                }
+            }
+
+            /**
+             * Gets a random candy type.
+             */
+            function getRandomCandy() {
+                return CANDY_TYPES[Math.floor(Math.random() * CANDY_TYPES.length)];
+            }
+
+            /**
+             * Handles the start of a drag or swipe.
+             */
+            function handleDragStart(e) {
+                if (isProcessing || moves <= 0) return;
+
+                let clickedElement = e.target;
+                // For touch events, target is where touch started
+                const clickedCandy = clickedElement.closest('.candy');
+
+                if (!clickedCandy) return;
+
+                // Prevent default scrolling behavior on touch
+                if (e.type === 'touchstart') {
+                    e.preventDefault();
+                }
+
+                const row = parseInt(clickedCandy.dataset.row);
+                const col = parseInt(clickedCandy.dataset.col);
+
+                dragStartCandy = { element: clickedCandy, row, col };
+                clickedCandy.classList.add('selected');
+            }
+
+            /**
+             * Handles the drag movement.
+             */
+            function handleDragMove(e) {
+                if (!dragStartCandy || isProcessing) return;
+
+                let targetElement;
+                let clientX, clientY;
+
+                if (e.type === 'touchmove') {
+                    e.preventDefault(); // Prevent scrolling while dragging
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else { // mousemove
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+
+                targetElement = document.elementFromPoint(clientX, clientY);
+                const targetCandyEl = targetElement?.closest('.candy');
+
+                // If not a candy, or it's the same candy we started on, do nothing
+                if (!targetCandyEl || targetCandyEl === dragStartCandy.element) {
+                    if (currentDragTarget) {
+                        currentDragTarget.classList.remove('valid-target', 'invalid-target');
+                        currentDragTarget = null;
+                    }
+                    return;
+                }
+
+                // Remove previous target highlighting
+                if (currentDragTarget && currentDragTarget !== targetCandyEl) {
+                    currentDragTarget.classList.remove('valid-target', 'invalid-target');
+                }
+
+                const row = parseInt(targetCandyEl.dataset.row);
+                const col = parseInt(targetCandyEl.dataset.col);
+                const targetCandy = { element: targetCandyEl, row, col };
+
+                // Check for adjacency
+                if (isAdjacent(dragStartCandy, targetCandy)) {
+                    // This is a valid swipe target
+                    targetCandyEl.classList.add('valid-target');
+                    currentDragTarget = targetCandyEl;
+                } else {
+                    // Not adjacent
+                    targetCandyEl.classList.add('invalid-target');
+                    currentDragTarget = targetCandyEl;
+                }
+            }
+
+            /**
+             * Handles the end of a drag or swipe (mouseup/touchend).
+             */
+            function handleDragEnd(e) {
+                // Clear any target highlighting
+                if (currentDragTarget) {
+                    currentDragTarget.classList.remove('valid-target', 'invalid-target');
+                }
+
+                // If we have a drag start and a valid target, process the swap
+                if (dragStartCandy && currentDragTarget) {
+                    const row = parseInt(currentDragTarget.dataset.row);
+                    const col = parseInt(currentDragTarget.dataset.col);
+                    const targetCandy = { element: currentDragTarget, row, col };
+
+                    if (isAdjacent(dragStartCandy, targetCandy)) {
+                        // Valid swap
+                        isProcessing = true;
+                        dragStartCandy.element.classList.remove('selected');
+                        currentDragTarget.classList.remove('valid-target');
+
+                        updateMoves(-1);
+
+                        const startCandyForSwap = dragStartCandy;
+
+                        swapAndProcess(startCandyForSwap, targetCandy);
+                    }
+                }
+
+                // Reset drag state
+                if (dragStartCandy) {
+                    dragStartCandy.element.classList.remove('selected');
+                }
+                dragStartCandy = null;
+                currentDragTarget = null;
+            }
+
+            /**
+             * Checks if two candies are adjacent (not diagonal).
+             */
+            function isAdjacent(candy1, candy2) {
+                const rowDiff = Math.abs(candy1.row - candy2.row);
+                const colDiff = Math.abs(candy1.col - candy2.col);
+                return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+            }
+
+            /**
+             * Swaps two candies in the array and checks for matches.
+             */
+            async function swapAndProcess(c1, c2) {
+                // Add swap animation to both candies
+                c1.element.classList.add('swapping');
+                c2.element.classList.add('swapping');
+
+                // Swap in array
+                swap(c1, c2);
+
+                // Update only the swapped positions
+                updateBoardPositions([{ r: c1.row, c: c1.col }, { r: c2.row, c: c2.col }]);
+                await delay(300); // Wait for swap animation
+
+                const matches = checkAllMatches();
+                if (matches.length === 0) {
+                    // Invalid move: no matches
+                    swap(c1, c2); // Swap back in array
+                    updateBoardPositions([{ r: c1.row, c: c1.col }, { r: c2.row, c: c2.col }]);
+                    showMessage("No match found!");
+
+                    // Give back the move
+                    updateMoves(1);
+
+                    isProcessing = false;
+                } else {
+                    // Valid move: start processing matches
+                    await processMatchesLoop();
+
+                    // After all cascades, check for game end
+                    if (moves <= 0) {
+                        endGame("Out of moves!");
+                    }
+                }
+            }
+
+            /**
+             * The main game loop for processing matches, gravity, and refilling.
+             */
+            async function processMatchesLoop() {
+                let matches = checkAllMatches();
+
+                if (matches.length === 0) {
+                    isProcessing = false; // Unlock board, cascade is over
+
+                    // Check for no more possible moves
+                    if (moves > 0 && !findPossibleMoves()) {
+                        await handleNoMoreMoves();
+                    }
+
+                    return; // Base case for recursion
+                }
+
+                // 1. Update Score and Animate Pop
+                updateScore(matches.length * 10); // 10 points per candy
+                await animatePop(matches);
+
+                // 2. Remove matches from array (set to null)
+                removeMatches(matches);
+
+                // 3. Apply gravity and fill empty spots
+                const allChanges = applyGravityAndRefill();
+
+                // 4. Update only the affected positions
+                updateBoardPositions(allChanges);
+
+                await delay(400); // Wait for animations to feel right
+
+                // 5. Recursively check for new matches from the cascade
+                await processMatchesLoop();
+            }
+
+            /**
+             * Swaps two candies in the board array.
+             */
+            function swap(c1, c2) {
+                [board[c1.row][c1.col], board[c2.row][c2.col]] =
+                    [board[c2.row][c2.col], board[c1.row][c1.col]];
+            }
+
+            /**
+             * Checks the entire board for all matches of 3 or more.
+             * @returns {Array} A list of {r, c} coordinates for matched candies.
+             */
+            function checkAllMatches() {
+                const matchedCoords = new Set();
+
+                // Check horizontal
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS - 2; c++) {
+                        if (board[r][c] && board[r][c] === board[r][c + 1] && board[r][c] === board[r][c + 2]) {
+                            let matchLength = 3;
+                            while (c + matchLength < COLS && board[r][c] === board[r][c + matchLength]) {
+                                matchLength++;
+                            }
+                            for (let i = 0; i < matchLength; i++) {
+                                matchedCoords.add(`${r}-${c + i}`);
+                            }
+                            c += matchLength - 1; // Skip checked candies
+                        }
+                    }
+                }
+
+                // Check vertical
+                for (let c = 0; c < COLS; c++) {
+                    for (let r = 0; r < ROWS - 2; r++) {
+                        if (board[r][c] && board[r][c] === board[r + 1][c] && board[r][c] === board[r + 2][c]) {
+                            let matchLength = 3;
+                            while (r + matchLength < ROWS && board[r][c] === board[r + matchLength][c]) {
+                                matchLength++;
+                            }
+                            for (let i = 0; i < matchLength; i++) {
+                                matchedCoords.add(`${r + i}-${c}`);
+                            }
+                            r += matchLength - 1; // Skip checked candies
+                        }
+                    }
+                }
+
+                // Convert set strings to coordinate objects
+                return Array.from(matchedCoords).map(coord => {
+                    const [r, c] = coord.split('-').map(Number);
+                    return { r, c };
+                });
+            }
+
+            /**
+             * Adds the 'pop' class to matched candies and waits for the animation.
+             */
+            function animatePop(matches) {
+                for (const { r, c } of matches) {
+                    const candy = gameBoard.querySelector(`.candy[data-row="${r}"][data-col="${c}"]`);
+                    if (candy) {
+                        candy.classList.add('pop');
+                    }
+                }
+                return delay(300); // Wait for pop animation to finish
+            }
+
+            /**
+             * Sets matched candy positions in the array to null.
+             */
+            function removeMatches(matches) {
+                for (const { r, c } of matches) {
+                    board[r][c] = null;
+                }
+            }
+
+            /**
+             * Applies gravity and fills empty spots in one efficient pass
+             * @returns {Array} List of all changed positions {r, c}
+             */
+            function applyGravityAndRefill() {
+                const changedPositions = [];
+
+                // Process each column independently
+                for (let c = 0; c < COLS; c++) {
+                    // First, let candies fall down (gravity)
+                    let writeIndex = ROWS - 1;
+
+                    // Move existing candies down
+                    for (let r = ROWS - 1; r >= 0; r--) {
+                        if (board[r][c] !== null) {
+                            if (writeIndex !== r) {
+                                // Candy is moving to a new position
+                                board[writeIndex][c] = board[r][c];
+                                board[r][c] = null;
+                                changedPositions.push({ r: writeIndex, c });
+                                changedPositions.push({ r: r, c });
+                            }
+                            writeIndex--;
+                        }
+                    }
+
+                    // Then fill the empty spots at the top with new candies
+                    for (let r = writeIndex; r >= 0; r--) {
+                        board[r][c] = getRandomCandy();
+                        changedPositions.push({ r, c });
+                    }
+                }
+
+                return changedPositions;
+            }
+
+            /**
+             * Checks the board to see if any valid moves are left.
+             * @returns {boolean} True if a move exists, false otherwise.
+             */
+            function findPossibleMoves() {
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        // Try swapping right
+                        if (c < COLS - 1) {
+                            swap({ row: r, col: c }, { row: r, col: c + 1 });
+                            if (checkAllMatches().length > 0) {
+                                swap({ row: r, col: c }, { row: r, col: c + 1 }); // Swap back
+                                return true;
+                            }
+                            swap({ row: r, col: c }, { row: r, col: c + 1 }); // Swap back
+                        }
+                        // Try swapping down
+                        if (r < ROWS - 1) {
+                            swap({ row: r, col: c }, { row: r + 1, col: c });
+                            if (checkAllMatches().length > 0) {
+                                swap({ row: r, col: c }, { row: r + 1, col: c }); // Swap back
+                                return true;
+                            }
+                            swap({ row: r, col: c }, { row: r + 1, col: c }); // Swap back
+                        }
+                    }
+                }
+                return false;
+            }
+
+            /**
+             * Handles the "No more moves" scenario by reshuffling the board.
+             */
+            async function handleNoMoreMoves() {
+                showMessage("No more moves! Reshuffling...");
+                isProcessing = true;
+                await delay(2000);
+
+                createBoard(); // Create a new, valid board
+                renderBoard(); // Full render for reshuffle
+                await delay(300);
+
+                isProcessing = false;
+                showMessage("Board reshuffled!");
+            }
+
+            /**
+             * Ends the game and shows a final message.
+             */
+            function endGame(message) {
+                isProcessing = true;
+                finalMessage.textContent = `${message} Final Score: ${score}`;
+                gameOver.classList.add('show');
+            }
+
+            /**
+             * Updates the score on the UI.
+             */
+            function updateScore(pointsToAdd) {
+                score += pointsToAdd;
+                scoreElement.innerText = score;
+            }
+
+            /**
+             * Updates the moves on the UI.
+             */
+            function updateMoves(moveChange) {
+                moves += moveChange;
+                if (moves < 0) moves = 0;
+                movesElement.innerText = moves;
+            }
+
+            /**
+             * Shows a custom message.
+             */
+            function showMessage(text) {
+                messageBox.innerText = text;
+                messageBox.classList.add('show');
+                setTimeout(() => {
+                    messageBox.classList.remove('show');
+                }, 2000);
+            }
+
+            /**
+             * A simple promise-based delay helper.
+             */
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // Start the game!
+            initGame();
+        });
+    </script>
+</body>
+
+</html>
