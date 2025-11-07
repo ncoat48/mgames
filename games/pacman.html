@@ -132,6 +132,7 @@
 
         .mobile-controls {
             display: none;
+            /* Will be set to 'grid' on mobile by media query */
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             gap: 10px;
@@ -292,6 +293,27 @@
             margin-bottom: 20px;
         }
 
+        .swipe-indicator {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 204, 0, 0.7);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #000;
+            font-weight: bold;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
@@ -299,10 +321,15 @@
 
             .mobile-controls {
                 display: grid;
+                /* BUG FIX: Show D-pad on mobile */
             }
 
             .instructions {
                 font-size: 0.9rem;
+            }
+
+            .swipe-indicator {
+                display: flex;
             }
         }
 
@@ -320,11 +347,6 @@
                 flex-direction: row;
                 justify-content: space-between;
                 width: 100%;
-            }
-
-            .mobile-controls {
-                width: 200px;
-                height: 200px;
             }
         }
     </style>
@@ -354,7 +376,8 @@
         </div>
 
         <div class="game-container">
-            <canvas id="gameCanvas" width="600" height="600"></canvas>
+            <canvas id="gameCanvas" width="600" height="380"></canvas>
+            <div class="swipe-indicator" id="swipeIndicator"></div>
 
             <div class="game-over" id="gameOver">
                 <h2>GAME OVER</h2>
@@ -367,10 +390,10 @@
             <button class="btn" id="startBtn">START GAME</button>
 
             <div class="speed-controls">
-                <span class="speed-label">SPEED:</span>
-                <button class="speed-btn active" id="slowBtn">SLOW</button>
-                <button class="speed-btn" id="mediumBtn">MEDIUM</button>
-                <button class="speed-btn" id="fastBtn">FAST</button>
+                <span class="speed-label"></span>
+                <button class="speed-btn" id="slowBtn"></button>
+                <button class="speed-btn active" id="mediumBtn"></button>
+                <button class="speed-btn" id="fastBtn"></button>
             </div>
 
             <div class="mobile-controls">
@@ -386,7 +409,7 @@
             <p>Guide Pac-Man through the maze to eat all the dots while avoiding the ghosts!</p>
             <ul>
                 <li><strong>PC:</strong> Use arrow keys to move</li>
-                <li><strong>Mobile:</strong> Use the directional buttons</li>
+                <li><strong>Mobile:</strong> Swipe in any direction or use the D-pad</li>
                 <li>Eat power pellets to temporarily turn the tables on the ghosts</li>
                 <li>Clear all dots to advance to the next level</li>
                 <li>Adjust game speed using the speed controls</li>
@@ -406,6 +429,7 @@
         const restartBtn = document.getElementById('restartBtn');
         const gameOverScreen = document.getElementById('gameOver');
         const finalScoreElement = document.getElementById('finalScore');
+        const swipeIndicator = document.getElementById('swipeIndicator');
 
         // Speed controls
         const slowBtn = document.getElementById('slowBtn');
@@ -424,14 +448,21 @@
         let level = 1;
         let gameRunning = false;
         let gameLoop;
-        let gameSpeed = 10; // Default to medium speed
+        let gameSpeed = 10; // Default to medium speed (for Pac-Man)
+
+        // Swipe detection variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
 
         // Maze configuration
         const gridSize = 20;
-        const rows = canvas.height / gridSize;
+        // BUG FIX: Removed unused 'rows' variable. Canvas height is 380, so 19 rows.
         const cols = canvas.width / gridSize;
 
         // Create a simple maze (1 = wall, 0 = dot, 2 = power pellet)
+        // This maze is 19 rows tall.
         let maze = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -473,11 +504,13 @@
         };
 
         // Ghost properties
+        // BUG FIX: Ghosts now have their own speed (12), which is slightly slower (higher number)
+        // than Pac-Man's default (10). This fixes Bug 1 & 2.
         let ghosts = [
-            { x: 14, y: 10, color: '#FF0000', direction: 'up', speed: 2, moveCounter: 0 },
-            { x: 15, y: 10, color: '#FFB8FF', direction: 'down', speed: 2, moveCounter: 0 },
-            { x: 13, y: 10, color: '#00FFFF', direction: 'left', speed: 2, moveCounter: 0 },
-            { x: 16, y: 10, color: '#FFB852', direction: 'right', speed: 2, moveCounter: 0 }
+            { x: 14, y: 10, color: '#FF0000', direction: 'up', speed: 12, moveCounter: 0 },
+            { x: 15, y: 10, color: '#FFB8FF', direction: 'down', speed: 12, moveCounter: 0 },
+            { x: 13, y: 10, color: '#00FFFF', direction: 'left', speed: 12, moveCounter: 0 },
+            { x: 16, y: 10, color: '#FFB852', direction: 'right', speed: 12, moveCounter: 0 }
         ];
 
         // Power mode
@@ -716,8 +749,8 @@
             for (const ghost of ghosts) {
                 ghost.moveCounter++;
 
-                // Only move when counter reaches the game speed threshold
-                if (ghost.moveCounter >= (powerMode ? gameSpeed * 1.5 : gameSpeed)) {
+                // BUG FIX: Use ghost.speed and make them slower in power mode
+                if (ghost.moveCounter >= (powerMode ? ghost.speed * 2 : ghost.speed)) {
                     ghost.moveCounter = 0;
 
                     // Simple AI: try to move in current direction, otherwise pick a random direction
@@ -744,31 +777,42 @@
                     if (ghost.x < 0) ghost.x = cols - 1;
                     if (ghost.x >= cols) ghost.x = 0;
 
-                    // Check for collision with Pac-Man
-                    if (ghost.x === pacman.x && ghost.y === pacman.y) {
-                        if (powerMode) {
-                            // Ghost is eaten
-                            score += 200;
-                            scoreElement.textContent = score;
+                    // BUG FIX: Collision logic moved to checkGhostCollisions()
+                }
+            }
+        }
 
-                            // Reset ghost position
-                            ghost.x = 14 + Math.floor(Math.random() * 3);
-                            ghost.y = 10;
+        // BUG FIX: New function to handle all ghost collisions
+        function checkGhostCollisions() {
+            if (!gameRunning) return; // Don't run if game is over
+
+            for (const ghost of ghosts) {
+                if (ghost.x === pacman.x && ghost.y === pacman.y) {
+                    if (powerMode) {
+                        // Ghost is eaten
+                        score += 200;
+                        scoreElement.textContent = score;
+
+                        // Reset ghost position
+                        ghost.x = 14 + Math.floor(Math.random() * 3);
+                        ghost.y = 10;
+                    } else {
+                        // Pac-Man is caught
+                        lives--;
+                        livesElement.textContent = lives;
+
+                        if (lives <= 0) {
+                            gameOver();
                         } else {
-                            // Pac-Man is caught
-                            lives--;
-                            livesElement.textContent = lives;
-
-                            if (lives <= 0) {
-                                gameOver();
-                            } else {
-                                resetPositions();
-                            }
+                            resetPositions();
                         }
+                        // Important: stop checking once a life is lost this frame
+                        return;
                     }
                 }
             }
         }
+
 
         // Get opposite direction
         function getOppositeDirection(dir) {
@@ -796,9 +840,10 @@
             level++;
             levelElement.textContent = level;
 
-            // Increase difficulty
+            // BUG FIX: Increase difficulty by making ghosts faster (DECREASING their speed value)
             for (const ghost of ghosts) {
-                ghost.speed = Math.min(ghost.speed + 0.2, 5);
+                // Math.max ensures speed doesn't go below 5 (which is 'Fast' for Pac-Man)
+                ghost.speed = Math.max(ghost.speed - 1, 5);
             }
 
             // Reset positions and generate new dots
@@ -847,18 +892,27 @@
             livesElement.textContent = lives;
             levelElement.textContent = level;
 
+            // BUG FIX: Reset ghost speeds to level 1 default
+            let baseGhostSpeed = 12; // Base speed for level 1
+            for (const ghost of ghosts) {
+                ghost.speed = baseGhostSpeed;
+            }
+
             gameOverScreen.style.display = 'none';
             gameRunning = true;
 
             initDots();
             resetPositions();
 
+            // Set default speed on start
+            setGameSpeed(10);
+
             gameLoop = requestAnimationFrame(update);
         }
 
         // Set game speed
         function setGameSpeed(speed) {
-            gameSpeed = speed;
+            gameSpeed = speed; // This is Pac-Man's speed
 
             // Update active button
             slowBtn.classList.remove('active');
@@ -871,6 +925,63 @@
                 mediumBtn.classList.add('active');
             } else if (speed === 5) {
                 fastBtn.classList.add('active');
+            }
+        }
+
+        // Show swipe indicator
+        function showSwipeIndicator(direction) {
+            let symbol = '';
+            switch (direction) {
+                case 'up': symbol = '↑'; break;
+                case 'down': symbol = '↓'; break;
+                case 'left': symbol = '←'; break;
+                case 'right': symbol = '→'; break;
+            }
+
+            swipeIndicator.textContent = symbol;
+            swipeIndicator.style.opacity = '1';
+
+            setTimeout(() => {
+                swipeIndicator.style.opacity = '0';
+            }, 300);
+        }
+
+        // BUG FIX: New function to set direction, used by swipe and D-pad
+        function setNextDirection(direction) {
+            if (!gameRunning) return;
+            pacman.nextDirection = direction;
+        }
+
+        // Handle swipe gestures
+        function handleSwipe(direction) {
+            setNextDirection(direction); // Use the new function
+            showSwipeIndicator(direction);
+        }
+
+        // Detect swipe direction
+        function detectSwipe() {
+            const minSwipeDistance = 30; // Minimum distance for a swipe to be registered
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+
+            // Check if swipe distance is sufficient
+            if (Math.abs(dx) > minSwipeDistance || Math.abs(dy) > minSwipeDistance) {
+                // Determine primary direction
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    // Horizontal swipe
+                    if (dx > 0) {
+                        handleSwipe('right');
+                    } else {
+                        handleSwipe('left');
+                    }
+                } else {
+                    // Vertical swipe
+                    if (dy > 0) {
+                        handleSwipe('down');
+                    } else {
+                        handleSwipe('up');
+                    }
+                }
             }
         }
 
@@ -889,7 +1000,11 @@
 
             // Update game state
             movePacman();
+            checkGhostCollisions(); // BUG FIX: Check after Pac-Man moves
+
             moveGhosts();
+            checkGhostCollisions(); // BUG FIX: Check again after ghosts move
+
             updatePowerMode();
 
             // Continue game loop
@@ -902,47 +1017,47 @@
 
             switch (e.key) {
                 case 'ArrowUp':
-                    pacman.nextDirection = 'up';
+                    setNextDirection('up');
                     e.preventDefault();
                     break;
                 case 'ArrowDown':
-                    pacman.nextDirection = 'down';
+                    setNextDirection('down');
                     e.preventDefault();
                     break;
                 case 'ArrowLeft':
-                    pacman.nextDirection = 'left';
+                    setNextDirection('left');
                     e.preventDefault();
                     break;
                 case 'ArrowRight':
-                    pacman.nextDirection = 'right';
+                    setNextDirection('right');
                     e.preventDefault();
                     break;
             }
         });
 
-        // Event listeners for mobile controls
-        upBtn.addEventListener('touchstart', () => {
-            if (gameRunning) pacman.nextDirection = 'up';
+        // Event listeners for touch controls (swipe)
+        canvas.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            e.preventDefault();
         });
 
-        downBtn.addEventListener('touchstart', () => {
-            if (gameRunning) pacman.nextDirection = 'down';
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling while playing
         });
 
-        leftBtn.addEventListener('touchstart', () => {
-            if (gameRunning) pacman.nextDirection = 'left';
+        canvas.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].clientX;
+            touchEndY = e.changedTouches[0].clientY;
+            detectSwipe();
+            e.preventDefault();
         });
 
-        rightBtn.addEventListener('touchstart', () => {
-            if (gameRunning) pacman.nextDirection = 'right';
-        });
-
-        // Prevent default touch behavior for control buttons
-        document.querySelectorAll('.control-btn').forEach(btn => {
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-            });
-        });
+        // BUG FIX: Event listeners for mobile D-pad
+        upBtn.addEventListener('click', () => setNextDirection('up'));
+        downBtn.addEventListener('click', () => setNextDirection('down'));
+        leftBtn.addEventListener('click', () => setNextDirection('left'));
+        rightBtn.addEventListener('click', () => setNextDirection('right'));
 
         // Speed control buttons
         slowBtn.addEventListener('click', () => setGameSpeed(15));
@@ -957,6 +1072,7 @@
         initDots();
         drawMaze();
         drawDots();
+        resetPositions(); // Call this to put Pac-Man and ghosts in place
         drawPacman();
         drawGhosts();
     </script>
