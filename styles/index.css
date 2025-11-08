@@ -750,7 +750,16 @@ a:focus {
     color: #f59e0b;
     text-decoration: underline;
 }
+.contact-link {
+    color: #6366f1;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
 
+.contact-link:hover {
+    color: #f59e0b;
+    text-decoration: underline;
+}
 /* Game Header with Platform Tags */
 .game-header {
     display: flex;
@@ -784,3 +793,4 @@ a:focus {
 .platform-tag:hover {
     transform: scale(1.1);
 }
+
