@@ -199,6 +199,13 @@
       cursor: pointer;
       margin-top: 15px;
     }
+    .bb {
+      position: fixed;
+      top: 70px;
+      left: 10px;
+      width: 100px;
+      backdrop-filter: blur(5px);
+    }
   </style>
 </head>
 
@@ -206,7 +213,9 @@
   <div id="wrap">
     <canvas id="c" width="480" height="768"></canvas>
   </div>
-
+  <div class="bb">
+    <a href="../index.html" class="back-btn-2">← Back</a>
+  </div>
   <div class="ui">Score: <span id="score">0</span></div>
   <div class="boost-indicator">
     <span>Boost:</span>
