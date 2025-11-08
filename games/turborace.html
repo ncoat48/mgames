@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turbo Racer - Car Racing Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      z-index: -1;
+    }
+
+    .game-header {
+      text-align: center;
+      margin-bottom: 15px;
+      z-index: 10;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 5px;
+      background: linear-gradient(to right, #ff6b6b, #ffd166, #06d6a0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 2px;
+    }
+
+    .game-subtitle {
+      font-size: 1rem;
+      color: #b8c2cc;
+      margin-bottom: 10px;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 400px;
+      height: 600px;
+      background:
+        linear-gradient(to bottom, #2d3748 0%, #1a202c 100%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #gameArea::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        repeating-linear-gradient(to bottom,
+          transparent 0px,
+          transparent 119px,
+          rgba(255, 255, 255, 0.03) 120px,
+          rgba(255, 255, 255, 0.03) 121px);
+      z-index: 1;
+    }
+
+    .roadLine {
+      position: absolute;
+      width: 8px;
+      height: 60px;
+      background: linear-gradient(to bottom, transparent 0%, #f8f9fa 10%, #f8f9fa 90%, transparent 100%);
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(248, 249, 250, 0.7);
+      z-index: 2;
+    }
+
+    .car,
+    .enemy {
+      position: absolute;
+      width: 60px;
+      height: 100px;
+      border-radius: 10px 10px 15px 15px;
+      z-index: 5;
+      transition: left 0.2s ease;
+    }
+
+    .car {
+      background: linear-gradient(135deg, #ff6b6b 0%, #e63946 100%);
+      bottom: 30px;
+      left: 170px;
+      box-shadow:
+        0 5px 15px rgba(230, 57, 70, 0.5),
+        inset 0 2px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .car::before,
+    .car::after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      top: 20px;
+    }
+
+    .car::before {
+      left: 8px;
+    }
+
+    .car::after {
+      right: 8px;
+    }
+
+    .car-window {
+      position: absolute;
+      width: 40px;
+      height: 25px;
+      background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
+      border-radius: 5px;
+      top: 15px;
+      left: 10px;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .enemy {
+      box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.5),
+        inset 0 2px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+.back-btn-2 {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      padding: 8px 16px;
+      font-size: 14px;
+      background: #4a90e2;
+      border: none;
+      border-radius: 20px;
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      font-family: Arial, sans-serif;
+    }
+
+    .back-btn-2:hover {
+      background: #357ae8;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .enemy::before,
+    .enemy::after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      top: 20px;
+    }
+
+    .enemy::before {
+      left: 8px;
+    }
+
+    .enemy::after {
+      right: 8px;
+    }
+
+    .enemy-window {
+      position: absolute;
+      width: 40px;
+      height: 25px;
+      background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
+      border-radius: 5px;
+      top: 15px;
+      left: 10px;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .score-container {
+      display: flex;
+      justify-content: space-between;
+      width: 400px;
+      margin-top: 15px;
+      padding: 0 10px;
+    }
+
+    #score,
+    #speed {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.2em;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #score {
+      color: #06d6a0;
+    }
+
+    #speed {
+      color: #ffd166;
+    }
+
+    /* Touch controls */
+    #controls {
+      display: none;
+      /* MODIFIED: Hidden by default now */
+      width: 100%;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 30px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+      color: white;
+      border: none;
+      font-size: 2em;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      user-select: none;
+      box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+      box-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 700px) {
+      /* MODIFIED: Commented out to hide buttons, as we are using swipe controls */
+      /*
+    #controls {
+      display: flex;
+    }
+    */
+
+      #gameArea {
+        width: 350px;
+        height: 550px;
+      }
+
+      .score-container {
+        width: 350px;
+      }
+    }
+
+    /* Game over overlay */
+    #gameOver {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      border-radius: 12px;
+    }
+
+    #gameOver h2 {
+      font-size: 3rem;
+      color: #ff6b6b;
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px rgba(255, 107, 107, 0.7);
+    }
+
+    #gameOver p {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+    }
+
+    #restartBtn {
+      background: linear-gradient(135deg, #06d6a0 0%, #04a77c 100%);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(6, 214, 160, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    #restartBtn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(6, 214, 160, 0.6);
+    }
+
+    /* Particle effects */
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    /* Speed lines effect */
+    .speed-line {
+      position: absolute;
+      width: 2px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 1px;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="game-header">
+      <h1>🚗 TURBO RACER 🏁</h1>
+      <div class="game-subtitle">Avoid the oncoming cars and set a high score!</div>
+  </div>
+  <a href="../index.html" class="back-btn-2">← Back</a>
+
+  <div class="score-container">
+      <div id="score">Score: 0</div>
+      <div id="speed">Speed: 5</div>
+  </div>
+
+  <div id="gameArea">
+      <div id="gameOver">
+          <h2>💥 GAME OVER</h2>
+          <p>Your Score: <span id="finalScore">0</span></p>
+          <button id="restartBtn">PLAY AGAIN</button>
+        </div>
+  </div>
+
+  <div id="controls">
+      <button class="btn" id="leftBtn">⬅️</button>
+      <button class="btn" id="rightBtn">➡️</button>
+  </div>
+
+  <script>
+    const gameArea = document.getElementById('gameArea');
+    const scoreDisplay = document.getElementById('score');
+    const speedDisplay = document.getElementById('speed');
+    const gameOverScreen = document.getElementById('gameOver');
+    const finalScoreDisplay = document.getElementById('finalScore');
+    const restartBtn = document.getElementById('restartBtn');
+
+    let player = { speed: 5, score: 0, lane: 2, start: false };
+    let keys = { ArrowLeft: false, ArrowRight: false };
+    let lines = [];
+    let enemies = [];
+    let animationId;
+    const lanePositions = [35, 135, 235, 335]; // 4 lanes
+    let particles = [];
+    let speedLines = [];
+
+    // NEW: Variables for swipe controls
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    // Create road lines
+    for (let i = 0; i < 6; i++) {
+      let line = document.createElement('div');
+      line.classList.add('roadLine');
+      line.y = i * 120;
+      line.style.top = line.y + "px";
+      gameArea.appendChild(line);
+      lines.push(line);
+    }
+
+    // Create player car
+    const car = document.createElement('div');
+    car.classList.add('car');
+    const carWindow = document.createElement('div');
+    carWindow.classList.add('car-window');
+    car.appendChild(carWindow);
+    gameArea.appendChild(car);
+
+    // Create enemies ensuring at least one lane remains empty
+    function createEnemies() {
+      enemies.forEach(e => e.remove());
+      enemies = [];
+
+      const lanesUsed = new Set();
+      const totalEnemies = Math.floor(Math.random() * 3) + 2; // 2–4 enemies per wave
+
+      while (lanesUsed.size < totalEnemies) {
+        const randomLane = Math.floor(Math.random() * 4);
+        lanesUsed.add(randomLane);
+      }
+
+      // Ensure at least one lane is empty
+      if (lanesUsed.size === 4) {
+        lanesUsed.delete([...lanesUsed][Math.floor(Math.random() * 4)]);
+      }
+
+      lanesUsed.forEach(laneIndex => {
+        let enemy = document.createElement('div');
+        enemy.classList.add('enemy');
+
+        // Random enemy colors
+        const colors = [
+          'linear-gradient(135deg, #ffd166 0%, #ffb700 100%)',
+          'linear-gradient(135deg, #06d6a0 0%, #04a77c 100%)',
+          'linear-gradient(135deg, #118ab2 0%, #0a6c8f 100%)',
+          'linear-gradient(135deg, #ef476f 0%, #d90429 100%)',
+          'linear-gradient(135deg, #7209b7 0%, #560bad 100%)'
+        ];
+
+        enemy.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+        enemy.y = -120 - Math.random() * 200;
+        enemy.style.left = lanePositions[laneIndex] + "px";
+        enemy.style.top = enemy.y + "px";
+
+        const enemyWindow = document.createElement('div');
+        enemyWindow.classList.add('enemy-window');
+        enemy.appendChild(enemyWindow);
+
+        gameArea.appendChild(enemy);
+        enemies.push(enemy);
+      });
+    }
+
+    function moveLines() {
+      lines.forEach(line => {
+        line.y += player.speed;
+        if (line.y > 600) line.y -= 720;
+        line.style.top = line.y + "px";
+      });
+    }
+
+    function moveEnemies() {
+      enemies.forEach(enemy => {
+        enemy.y += player.speed;
+        enemy.style.top = enemy.y + "px";
+
+        if (enemy.y > 600) {
+          enemy.remove();
+          enemies = enemies.filter(e => e !== enemy);
+          if (enemies.length === 0) {
+            player.score++;
+            scoreDisplay.textContent = "Score: " + player.score;
+            createEnemies();
+            player.speed += 0.2; // Gradual speed increase
+            speedDisplay.textContent = "Speed: " + Math.floor(player.speed * 10) / 10;
+          }
+        }
+
+        if (isCollide(car, enemy)) {
+          createExplosion(car.offsetLeft + 30, car.offsetTop + 50);
+          endGame();
+        }
+      });
+    }
+
+    function isCollide(a, b) {
+      let aRect = a.getBoundingClientRect();
+      let bRect = b.getBoundingClientRect();
+      return !(
+        aRect.top > bRect.bottom ||
+        aRect.bottom < bRect.top ||
+        aRect.left > bRect.right ||
+        aRect.right < bRect.left
+      );
+    }
+
+    function createExplosion(x, y) {
+      for (let i = 0; i < 15; i++) {
+        let particle = document.createElement('div');
+        particle.classList.add('particle');
+        particle.style.left = x + "px";
+        particle.style.top = y + "px";
+        particle.style.background = i % 2 === 0 ? '#ff6b6b' : '#ffd166';
+
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 4;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+
+        gameArea.appendChild(particle);
+        particles.push({ element: particle, vx, vy, life: 30 });
+      }
+    }
+
+    function updateParticles() {
+      particles.forEach((particle, index) => {
+        particle.element.style.left = parseFloat(particle.element.style.left) + particle.vx + "px";
+        particle.element.style.top = parseFloat(particle.element.style.top) + particle.vy + "px";
+        particle.life--;
+
+        if (particle.life <= 0) {
+          particle.element.remove();
+          particles.splice(index, 1);
+        }
+      });
+    }
+
+    function createSpeedLines() {
+      // Remove old speed lines
+      speedLines.forEach(line => line.remove());
+      speedLines = [];
+
+      // Create new speed lines
+      for (let i = 0; i < 8; i++) {
+        let line = document.createElement('div');
+        line.classList.add('speed-line');
+        line.style.left = (Math.random() * 400) + "px";
+        line.style.top = (-30 - Math.random() * 600) + "px";
+        line.speed = 5 + Math.random() * 5;
+        gameArea.appendChild(line);
+        speedLines.push(line);
+      }
+    }
+
+    function moveSpeedLines() {
+      speedLines.forEach(line => {
+        let top = parseFloat(line.style.top);
+        top += player.speed + line.speed;
+
+        if (top > 600) {
+          top = -30;
+          line.style.left = (Math.random() * 400) + "px";
+        }
+
+        line.style.top = top + "px";
+      });
+    }
+
+    function playGame() {
+      if (!player.start) return;
+      moveLines();
+      moveEnemies();
+      updateParticles();
+      moveSpeedLines();
+
+      if (keys.ArrowLeft && player.lane > 0) player.lane--;
+      if (keys.ArrowRight && player.lane < 3) player.lane++;
+      keys.ArrowLeft = false;
+      keys.ArrowRight = false;
+
+      car.style.left = lanePositions[player.lane] + "px";
+      animationId = requestAnimationFrame(playGame);
+    }
+
+    function startGame() {
+      player.start = true;
+      player.score = 0;
+      player.lane = 1;
+      player.speed = 5;
+      scoreDisplay.textContent = "Score: 0";
+      speedDisplay.textContent = "Speed: 5";
+      gameOverScreen.style.display = 'none';
+      enemies.forEach(e => e.remove());
+      enemies = [];
+      createEnemies();
+      createSpeedLines();
+      playGame();
+    }
+
+    function endGame() {
+      player.start = false;
+      cancelAnimationFrame(animationId);
+      finalScoreDisplay.textContent = player.score;
+      gameOverScreen.style.display = 'flex';
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        keys[e.key] = true;
+      }
+    });
+
+    // Mobile touch controls (Buttons - you can keep or remove these)
+    document.getElementById('leftBtn').addEventListener('touchstart', () => keys.ArrowLeft = true);
+    document.getElementById('rightBtn').addEventListener('touchstart', () => keys.ArrowRight = true);
+    document.getElementById('leftBtn').addEventListener('touchend', () => keys.ArrowLeft = false);
+    document.getElementById('rightBtn').addEventListener('touchend', () => keys.ArrowRight = false);
+
+    // Click controls for desktop (Buttons)
+    document.getElementById('leftBtn').addEventListener('mousedown', () => keys.ArrowLeft = true);
+    document.getElementById('rightBtn').addEventListener('mousedown', () => keys.ArrowRight = true);
+    document.getElementById('leftBtn').addEventListener('mouseup', () => keys.ArrowLeft = false);
+    document.getElementById('rightBtn').addEventListener('mouseup', () => keys.ArrowRight = false);
+    document.getElementById('leftBtn').addEventListener('mouseleave', () => keys.ArrowLeft = false);
+    document.getElementById('rightBtn').addEventListener('mouseleave', () => keys.ArrowRight = false);
+
+
+    // --- NEW: Mobile SWIPE controls ---
+    gameArea.addEventListener('touchstart', (e) => {
+      // Check if the event target is not the restart button
+      if (e.target.id !== 'restartBtn') {
+        e.preventDefault(); // Prevent screen bounce
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: false }); // Need passive: false for preventDefault
+
+    gameArea.addEventListener('touchend', (e) => {
+      // Check if the event target is not the restart button
+      if (e.target.id !== 'restartBtn') {
+        e.preventDefault();
+        let touchEndX = e.changedTouches[0].clientX;
+        let touchEndY = e.changedTouches[0].clientY;
+
+        let dx = touchEndX - touchStartX;
+        let dy = touchEndY - touchStartY;
+
+        const swipeThreshold = 50; // Minimum distance (px) for a swipe
+
+        // Check if it's primarily a horizontal swipe and meets the threshold
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > swipeThreshold) {
+          if (dx < 0) {
+            // Swipe Left
+            keys.ArrowLeft = true;
+          } else {
+            // Swipe Right
+            keys.ArrowRight = true;
+          }
+        }
+      }
+    }, { passive: false });
+    // --- End of new swipe controls ---
+
+
+    restartBtn.addEventListener('click', startGame);
+
+    startGame();
+  </script>
+</body>
+
+</html>
