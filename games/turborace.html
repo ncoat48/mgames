@@ -75,7 +75,6 @@
       position: relative;
       width: 100%;
       max-width: 500px;
-      /* Increased from 600px */
       flex-grow: 1;
       background:
         linear-gradient(to bottom, #2d3748 0%, #1a202c 100%);
@@ -164,6 +163,63 @@
       box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
     }
 
+    /* NEW: Enhanced car details */
+    .car-details {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .car-grill {
+      position: absolute;
+      width: 30px;
+      height: 8px;
+      background: linear-gradient(to bottom, #333 0%, #555 100%);
+      bottom: 10px;
+      left: 15px;
+      border-radius: 2px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .car-exhaust {
+      position: absolute;
+      width: 6px;
+      height: 12px;
+      background: linear-gradient(to bottom, #333 0%, #222 100%);
+      bottom: -12px;
+      right: 10px;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .car-headlight {
+      position: absolute;
+      width: 8px;
+      height: 5px;
+      background: #ffd166;
+      border-radius: 2px;
+      bottom: 15px;
+      box-shadow: 0 0 5px #ffd166;
+    }
+
+    .car-headlight.left {
+      left: 5px;
+    }
+
+    .car-headlight.right {
+      right: 5px;
+    }
+
+    .car-stripe {
+      position: absolute;
+      width: 40px;
+      height: 8px;
+      background: linear-gradient(to right, #ffd166 0%, #ffb700 100%);
+      top: 45px;
+      left: 10px;
+      border-radius: 2px;
+    }
+
     .enemy {
       box-shadow:
         0 5px 15px rgba(0, 0, 0, 0.5),
@@ -222,6 +278,53 @@
       top: 15px;
       left: 10px;
       box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    /* NEW: Enhanced enemy details */
+    .enemy-details {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .enemy-grill {
+      position: absolute;
+      width: 30px;
+      height: 8px;
+      background: linear-gradient(to bottom, #333 0%, #555 100%);
+      bottom: 10px;
+      left: 15px;
+      border-radius: 2px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .enemy-exhaust {
+      position: absolute;
+      width: 6px;
+      height: 12px;
+      background: linear-gradient(to bottom, #333 0%, #222 100%);
+      bottom: -12px;
+      right: 10px;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .enemy-headlight {
+      position: absolute;
+      width: 8px;
+      height: 5px;
+      background: #ffd166;
+      border-radius: 2px;
+      bottom: 15px;
+      box-shadow: 0 0 5px #ffd166;
+    }
+
+    .enemy-headlight.left {
+      left: 5px;
+    }
+
+    .enemy-headlight.right {
+      right: 5px;
     }
 
     /* MODIFIED: Score container is now positioned absolutely */
@@ -363,6 +466,18 @@
       border-radius: 1px;
       z-index: 1;
     }
+
+    /* NEW: Exhaust effect */
+    .exhaust-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ff6b6b;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 4;
+      opacity: 0.7;
+    }
   </style>
 </head>
 
@@ -416,6 +531,7 @@
     let particles = [];
     let speedLines = [];
     let playerTop;
+    let exhaustParticles = [];
 
     let touchStartX = 0;
     let touchStartY = 0;
@@ -426,6 +542,32 @@
     const carWindow = document.createElement('div');
     carWindow.classList.add('car-window');
     car.appendChild(carWindow);
+    
+    // NEW: Add car details
+    const carDetails = document.createElement('div');
+    carDetails.classList.add('car-details');
+    
+    const carGrill = document.createElement('div');
+    carGrill.classList.add('car-grill');
+    carDetails.appendChild(carGrill);
+    
+    const carExhaust = document.createElement('div');
+    carExhaust.classList.add('car-exhaust');
+    carDetails.appendChild(carExhaust);
+    
+    const carHeadlightLeft = document.createElement('div');
+    carHeadlightLeft.classList.add('car-headlight', 'left');
+    carDetails.appendChild(carHeadlightLeft);
+    
+    const carHeadlightRight = document.createElement('div');
+    carHeadlightRight.classList.add('car-headlight', 'right');
+    carDetails.appendChild(carHeadlightRight);
+    
+    const carStripe = document.createElement('div');
+    carStripe.classList.add('car-stripe');
+    carDetails.appendChild(carStripe);
+    
+    car.appendChild(carDetails);
     gameArea.appendChild(car);
 
     // Function to set up game dimensions dynamically
@@ -508,6 +650,28 @@
         const enemyWindow = document.createElement('div');
         enemyWindow.classList.add('enemy-window');
         enemy.appendChild(enemyWindow);
+        
+        // NEW: Add enemy details
+        const enemyDetails = document.createElement('div');
+        enemyDetails.classList.add('enemy-details');
+        
+        const enemyGrill = document.createElement('div');
+        enemyGrill.classList.add('enemy-grill');
+        enemyDetails.appendChild(enemyGrill);
+        
+        const enemyExhaust = document.createElement('div');
+        enemyExhaust.classList.add('enemy-exhaust');
+        enemyDetails.appendChild(enemyExhaust);
+        
+        const enemyHeadlightLeft = document.createElement('div');
+        enemyHeadlightLeft.classList.add('enemy-headlight', 'left');
+        enemyDetails.appendChild(enemyHeadlightLeft);
+        
+        const enemyHeadlightRight = document.createElement('div');
+        enemyHeadlightRight.classList.add('enemy-headlight', 'right');
+        enemyDetails.appendChild(enemyHeadlightRight);
+        
+        enemy.appendChild(enemyDetails);
 
         gameArea.appendChild(enemy);
         enemies.push(enemy);
@@ -585,6 +749,24 @@
       }
     }
 
+    // NEW: Create exhaust effect
+    function createExhaust() {
+      if (player.speed > 7) {
+        for (let i = 0; i < 2; i++) {
+          let particle = document.createElement('div');
+          particle.classList.add('exhaust-particle');
+          particle.style.left = (car.offsetLeft + 10) + "px";
+          particle.style.top = (car.offsetTop + 100) + "px";
+          
+          const vx = -1 - Math.random() * 2;
+          const vy = 1 + Math.random() * 2;
+          
+          gameArea.appendChild(particle);
+          exhaustParticles.push({ element: particle, vx, vy, life: 20 });
+        }
+      }
+    }
+
     function updateParticles() {
       particles.forEach((particle, index) => {
         particle.element.style.left = parseFloat(particle.element.style.left) + particle.vx + "px";
@@ -594,6 +776,21 @@
         if (particle.life <= 0) {
           particle.element.remove();
           particles.splice(index, 1);
+        }
+      });
+      
+      // NEW: Update exhaust particles
+      exhaustParticles.forEach((particle, index) => {
+        particle.element.style.left = parseFloat(particle.element.style.left) + particle.vx + "px";
+        particle.element.style.top = parseFloat(particle.element.style.top) + particle.vy + "px";
+        particle.life--;
+        
+        // Fade out effect
+        particle.element.style.opacity = particle.life / 20;
+
+        if (particle.life <= 0) {
+          particle.element.remove();
+          exhaustParticles.splice(index, 1);
         }
       });
     }
@@ -633,6 +830,7 @@
       moveEnemies();
       updateParticles();
       moveSpeedLines();
+      createExhaust(); // NEW: Create exhaust effect
 
       if (keys.ArrowLeft && player.lane > 0) player.lane--;
       if (keys.ArrowRight && player.lane < 3) player.lane++;
