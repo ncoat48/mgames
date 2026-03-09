@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>METRO DASH — Multiplayer Runner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --neon: #00ffcc;
+    --hot: #ff3c6e;
+    --gold: #ffd700;
+    --bg: #0a0a0f;
+    --panel: #12121a;
+    --border: #1e1e2e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== LOBBY SCREEN ===== */
+  #lobby {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 0%, #0d2b2b 0%, #0a0a0f 70%);
+  }
+
+  #lobby h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 12vw, 7rem);
+    letter-spacing: 0.1em;
+    color: var(--neon);
+    text-shadow: 0 0 30px #00ffcc88, 0 0 80px #00ffcc33;
+    line-height: 1;
+  }
+
+  #lobby .tagline {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: #667;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .name-entry {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .name-entry label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--neon);
+    text-transform: uppercase;
+  }
+
+  .name-entry input {
+    background: #0a0a0f;
+    border: 1px solid #2a2a3a;
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .name-entry input:focus { border-color: var(--neon); }
+
+  .btn-join {
+    background: var(--neon);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+
+  .btn-join:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px #00ffcc44;
+  }
+
+  .btn-join:active { transform: translateY(0); }
+
+  /* ===== WAITING ROOM ===== */
+  #waiting {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 0%, #0d2b2b 0%, #0a0a0f 70%);
+  }
+
+  #waiting h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 8vw, 4rem);
+    color: var(--neon);
+    text-shadow: 0 0 20px #00ffcc66;
+    margin-bottom: 8px;
+  }
+
+  .batch-info {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: #667;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+  }
+
+  .player-list {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 380px;
+    min-height: 160px;
+    margin-bottom: 20px;
+  }
+
+  .player-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #0a0a0f;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .player-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--neon);
+    box-shadow: 0 0 8px var(--neon);
+  }
+
+  .waiting-msg {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: #445;
+    text-align: center;
+    padding: 20px 0;
+    text-transform: uppercase;
+  }
+
+  .countdown-bar {
+    width: 100%;
+    max-width: 380px;
+    height: 4px;
+    background: #1a1a2a;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .countdown-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon), var(--hot));
+    transition: width 0.1s linear;
+  }
+
+  .countdown-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: var(--hot);
+    text-shadow: 0 0 20px #ff3c6e88;
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    background: #0a0a0f;
+  }
+
+  .game-header {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    text-shadow: 0 0 10px #ffd70066;
+  }
+
+  .lives-display { display: flex; gap: 4px; }
+  .heart { font-size: 1.2rem; transition: opacity 0.3s; }
+  .heart.lost { opacity: 0.2; }
+
+  canvas#gameCanvas {
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    touch-action: none;
+    cursor: none;
+  }
+
+  /* Swipe hint */
+  .swipe-hint {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: #334;
+    text-transform: uppercase;
+    padding: 8px;
+    text-align: center;
+  }
+
+  /* ===== LEADERBOARD ===== */
+  #leaderboard {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 100%, #1a0d00 0%, #0a0a0f 70%);
+  }
+
+  #leaderboard h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px #ffd70066;
+    margin-bottom: 4px;
+  }
+
+  .lb-subtitle {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: #556;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+  }
+
+  .lb-list {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .lb-row:nth-child(1) { border-color: var(--gold); animation-delay: 0.1s; }
+  .lb-row:nth-child(2) { border-color: #aaa; animation-delay: 0.2s; }
+  .lb-row:nth-child(3) { border-color: #cd7f32; animation-delay: 0.3s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .lb-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    min-width: 32px;
+    text-align: center;
+  }
+
+  .lb-row:nth-child(1) .lb-rank { color: var(--gold); }
+  .lb-row:nth-child(2) .lb-rank { color: #aaa; }
+  .lb-row:nth-child(3) .lb-rank { color: #cd7f32; }
+  .lb-row:nth-child(n+4) .lb-rank { color: #445; }
+
+  .lb-name { flex: 1; font-size: 0.85rem; }
+  .lb-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--neon);
+  }
+
+  /* ===== WINNER SCREEN ===== */
+  #winner-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 30%, #1a0a00 0%, #0a0a0f 70%);
+  }
+
+  .winner-crown {
+    font-size: 5rem;
+    animation: bounce 1s infinite alternate;
+    margin-bottom: 10px;
+  }
+
+  @keyframes bounce {
+    from { transform: translateY(0) rotate(-5deg); }
+    to { transform: translateY(-10px) rotate(5deg); }
+  }
+
+  #winner-screen h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    color: var(--gold);
+    text-shadow: 0 0 40px #ffd700aa;
+    text-align: center;
+  }
+
+  #winner-screen .winner-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 8vw, 4rem);
+    color: var(--neon);
+    text-shadow: 0 0 20px #00ffcc66;
+    margin-bottom: 30px;
+  }
+
+  .reload-box {
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-radius: 14px;
+    padding: 24px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+
+  .reload-box p {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .reload-box input {
+    background: #0a0a0f;
+    border: 1px solid #2a2a3a;
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    width: 100%;
+    outline: none;
+    text-align: center;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+  }
+
+  .reload-box input:focus { border-color: var(--gold); }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--gold), #ff9500);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 16px;
+    width: 100%;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px #ffd70055;
+  }
+
+  .sent-msg {
+    display: none;
+    font-size: 0.8rem;
+    color: var(--neon);
+    padding: 10px;
+    text-align: center;
+    letter-spacing: 0.1em;
+  }
+
+  /* ===== ELIMINATED SCREEN ===== */
+  #eliminated-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 50%, #1a000a 0%, #0a0a0f 70%);
+    text-align: center;
+  }
+
+  #eliminated-screen .skull { font-size: 4rem; margin-bottom: 16px; }
+
+  #eliminated-screen h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    color: var(--hot);
+    text-shadow: 0 0 30px #ff3c6e88;
+    margin-bottom: 8px;
+  }
+
+  #eliminated-screen p {
+    font-size: 0.75rem;
+    color: #556;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+  }
+
+  .score-final {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: var(--neon);
+  }
+
+  /* Particles */
+  .particles {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--neon);
+    border-radius: 50%;
+    opacity: 0;
+    animation: float linear infinite;
+  }
+
+  @keyframes float {
+    0% { opacity: 0; transform: translateY(100vh) scale(0); }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-20px) scale(1.5); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Ambient particles -->
+<div class="particles" id="particles"></div>
+
+<!-- ===== LOBBY ===== -->
+<div id="lobby">
+  <h1>METRO<br>DASH</h1>
+  <div class="tagline">Multiplayer — 3 to 5 Players Per Batch</div>
+  <div class="name-entry">
+    <label>Enter Your Name</label>
+    <input type="text" id="playerName" placeholder="YOUR NAME" maxlength="16" autocomplete="off">
+    <button class="btn-join" onclick="joinGame()">JOIN GAME</button>
+  </div>
+</div>
+
+<!-- ===== WAITING ROOM ===== -->
+<div id="waiting">
+  <h2>WAITING ROOM</h2>
+  <div class="batch-info" id="batchInfo">BATCH #1 · 0 / 3 MIN PLAYERS</div>
+  <div class="player-list" id="playerListEl">
+    <div class="waiting-msg">Waiting for players to join...</div>
+  </div>
+  <div class="countdown-bar" id="cntBar" style="display:none">
+    <div class="countdown-fill" id="cntFill" style="width:100%"></div>
+  </div>
+  <div class="countdown-text" id="cntText" style="display:none"></div>
+  <div class="waiting-msg" id="waitMsg">Need at least 3 players to start</div>
+</div>
+
+<!-- ===== GAME ===== -->
+<div id="game-screen">
+  <div class="game-header">
+    <div>
+      <div style="font-size:0.6rem;letter-spacing:0.2em;color:#445;text-transform:uppercase">Score</div>
+      <div class="score-display" id="scoreDisplay">0</div>
+    </div>
+    <div>
+      <div style="font-size:0.6rem;letter-spacing:0.2em;color:#445;text-transform:uppercase;text-align:center">Lives</div>
+      <div class="lives-display" id="livesDisplay">
+        <span class="heart">❤️</span><span class="heart">❤️</span><span class="heart">❤️</span>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:0.6rem;letter-spacing:0.2em;color:#445;text-transform:uppercase">Players Alive</div>
+      <div id="aliveCount" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--hot)">?</div>
+    </div>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <div class="swipe-hint">← SWIPE / TAP LANES →   |   SWIPE UP: JUMP   |   SWIPE DOWN: SLIDE</div>
+</div>
+
+<!-- ===== ELIMINATED ===== -->
+<div id="eliminated-screen">
+  <div class="skull">💀</div>
+  <h2>ELIMINATED</h2>
+  <p>Better luck next time</p>
+  <div style="font-size:0.7rem;letter-spacing:0.2em;color:#445;text-transform:uppercase;margin-bottom:4px">Your Score</div>
+  <div class="score-final" id="elimScore">0</div>
+  <div style="margin-top:30px;font-size:0.65rem;letter-spacing:0.15em;color:#334;text-transform:uppercase">Watching results...</div>
+  <div id="elimLeaderboard" style="margin-top:20px;width:100%;max-width:380px"></div>
+</div>
+
+<!-- ===== LEADERBOARD ===== -->
+<div id="leaderboard">
+  <h2>FINAL RESULTS</h2>
+  <div class="lb-subtitle">Batch Complete</div>
+  <div class="lb-list" id="lbList"></div>
+</div>
+
+<!-- ===== WINNER ===== -->
+<div id="winner-screen">
+  <div class="winner-crown">👑</div>
+  <h2>WINNER!</h2>
+  <div class="winner-name" id="winnerNameDisplay"></div>
+  <div class="reload-box">
+    <p>🎉 Claim Your Free Reload 🎉</p>
+    <input type="tel" id="phoneInput" placeholder="e.g. 0771234567" maxlength="15">
+    <button class="btn-submit" onclick="submitPhone()">SEND MY NUMBER</button>
+    <div class="sent-msg" id="sentMsg">✅ Number sent! Your reload is on the way 🚀</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  GLOBAL STATE
+// ============================================================
+const STORAGE_KEY_LOBBY   = 'metrodash-lobby-v2';
+const STORAGE_KEY_BATCH   = 'metrodash-batch-v2';
+const BATCH_SIZE_MAX      = 5;
+const BATCH_SIZE_MIN      = 3;
+const COUNTDOWN_SECS      = 5;
+
+let myId        = null;
+let myName      = null;
+let myBatchId   = null;
+let myScore     = 0;
+let myLives     = 3;
+let gameRunning = false;
+let gameOver    = false;
+let pollTimer   = null;
+let countdownInt= null;
+let countingDown= false;
+
+// ============================================================
+//  STORAGE HELPERS
+// ============================================================
+async function storageGet(key, shared=true) {
+  try { return await window.storage.get(key, shared); } catch(e) { return null; }
+}
+async function storageSet(key, val, shared=true) {
+  try { return await window.storage.set(key, val, shared); } catch(e) { return null; }
+}
+async function storageList(prefix, shared=true) {
+  try { return await window.storage.list(prefix, shared); } catch(e) { return null; }
+}
+async function storageDel(key, shared=true) {
+  try { return await window.storage.delete(key, shared); } catch(e) { return null; }
+}
+
+// ============================================================
+//  JOIN GAME
+// ============================================================
+async function joinGame() {
+  const nameInput = document.getElementById('playerName').value.trim();
+  if (!nameInput) { alert('Enter your name first!'); return; }
+  myName = nameInput.toUpperCase();
+  myId   = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+
+  // Register player in global lobby
+  const player = { id: myId, name: myName, joined: Date.now(), batchId: null, score: 0, lives: 3, alive: true, finished: false };
+  await storageSet('player:' + myId, JSON.stringify(player));
+
+  // Assign to a batch
+  await assignBatch();
+
+  showScreen('waiting');
+  pollWaiting();
+}
+
+// ============================================================
+//  BATCH ASSIGNMENT
+// ============================================================
+async function assignBatch() {
+  // Load all batch metadata
+  const batchListRes = await storageList('batch:');
+  const batchKeys = batchListRes ? batchListRes.keys : [];
+
+  let assignedBatch = null;
+
+  for (const key of batchKeys) {
+    const bRes = await storageGet(key);
+    if (!bRes) continue;
+    const batch = JSON.parse(bRes.value);
+    if (batch.started) continue;
+    if (batch.players.length < BATCH_SIZE_MAX) {
+      batch.players.push(myId);
+      await storageSet(key, JSON.stringify(batch));
+      assignedBatch = batch;
+      myBatchId = batch.id;
+      break;
+    }
+  }
+
+  if (!assignedBatch) {
+    // Create new batch
+    const batchId = 'batch_' + Date.now();
+    const batch = { id: batchId, players: [myId], started: false, finished: false, startTime: null, scores: {} };
+    await storageSet('batch:' + batchId, JSON.stringify(batch));
+    myBatchId = batchId;
+  }
+
+  // Update player record with batchId
+  const pRes = await storageGet('player:' + myId);
+  if (pRes) {
+    const p = JSON.parse(pRes.value);
+    p.batchId = myBatchId;
+    await storageSet('player:' + myId, JSON.stringify(p));
+  }
+}
+
+// ============================================================
+//  WAITING POLL
+// ============================================================
+function pollWaiting() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(checkBatchStatus, 1500);
+}
+
+async function checkBatchStatus() {
+  const bRes = await storageGet('batch:' + myBatchId);
+  if (!bRes) return;
+  const batch = JSON.parse(bRes.value);
+
+  // Refresh player list UI
+  const players = [];
+  for (const pid of batch.players) {
+    const pRes = await storageGet('player:' + pid);
+    if (pRes) players.push(JSON.parse(pRes.value));
+  }
+
+  updateWaitingUI(batch, players);
+
+  // Batch already started
+  if (batch.started && !gameRunning) {
+    clearInterval(pollTimer);
+    if (countingDown) return;
+    startGame();
+  }
+
+  // Enough players - start countdown if not already
+  if (!batch.started && players.length >= BATCH_SIZE_MIN && !countingDown) {
+    countingDown = true;
+    startCountdown(batch);
+  }
+
+  // If < MIN and was counting, cancel
+  if (!batch.started && players.length < BATCH_SIZE_MIN && countingDown) {
+    countingDown = false;
+    clearInterval(countdownInt);
+    document.getElementById('cntBar').style.display = 'none';
+    document.getElementById('cntText').style.display = 'none';
+    document.getElementById('waitMsg').textContent = 'Need at least 3 players to start';
+  }
+}
+
+function updateWaitingUI(batch, players) {
+  const batchNum = batch.id.split('_')[1] ? Math.floor(parseInt(batch.id.split('_')[1]) / 1000) % 10000 : '?';
+  document.getElementById('batchInfo').textContent = `BATCH · ${players.length} / ${BATCH_SIZE_MIN} MIN PLAYERS`;
+
+  const el = document.getElementById('playerListEl');
+  if (players.length === 0) {
+    el.innerHTML = '<div class="waiting-msg">Waiting for players to join...</div>';
+    return;
+  }
+  el.innerHTML = players.map(p => `
+    <div class="player-chip">
+      <div class="player-dot" ${p.id === myId ? 'style="background:var(--gold)"' : ''}></div>
+      <span style="font-size:0.85rem">${p.name} ${p.id === myId ? '<span style="color:#445;font-size:0.65rem">(you)</span>' : ''}</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+//  COUNTDOWN
+// ============================================================
+function startCountdown(batch) {
+  document.getElementById('waitMsg').textContent = 'Enough players! Starting soon...';
+  document.getElementById('cntBar').style.display = 'block';
+  document.getElementById('cntText').style.display = 'block';
+
+  let secs = COUNTDOWN_SECS;
+  document.getElementById('cntText').textContent = secs;
+  document.getElementById('cntFill').style.width = '100%';
+
+  countdownInt = setInterval(async () => {
+    secs--;
+    document.getElementById('cntText').textContent = secs;
+    document.getElementById('cntFill').style.width = ((secs / COUNTDOWN_SECS) * 100) + '%';
+
+    if (secs <= 0) {
+      clearInterval(countdownInt);
+      // First player to reach 0 marks batch as started
+      const bRes = await storageGet('batch:' + myBatchId);
+      if (bRes) {
+        const b = JSON.parse(bRes.value);
+        if (!b.started) {
+          b.started = true;
+          b.startTime = Date.now();
+          await storageSet('batch:' + myBatchId, JSON.stringify(b));
+        }
+      }
+      clearInterval(pollTimer);
+      startGame();
+    }
+  }, 1000);
+}
+
+// ============================================================
+//  GAME ENGINE
+// ============================================================
+const COLORS = {
+  bg: '#0a0a0f',
+  track: '#12121a',
+  lane: '#1a1a2a',
+  player: '#00ffcc',
+  obstacle_train: '#ff3c6e',
+  obstacle_barrier: '#ffd700',
+  coin: '#ffd700',
+  ground: '#1e1e2e',
+};
+
+let canvas, ctx;
+let gameState = {};
+let animFrame;
+let touchStartX, touchStartY;
+let lastScorePush = 0;
+
+function startGame() {
+  if (gameRunning) return;
+  gameRunning = true;
+  showScreen('game-screen');
+
+  canvas = document.getElementById('gameCanvas');
+  ctx    = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  initGameState();
+  bindControls();
+  gameLoop();
+  setInterval(pushScore, 2000);
+  setInterval(pollBatchScores, 2500);
+}
+
+function resizeCanvas() {
+  const maxW = Math.min(window.innerWidth, 500);
+  canvas.width  = maxW;
+  canvas.height = Math.min(window.innerHeight - 110, 520);
+}
+
+function initGameState() {
+  const W = canvas.width, H = canvas.height;
+  const laneW = W / 3;
+  gameState = {
+    W, H,
+    laneW,
+    lanes: [laneW * 0.5, laneW * 1.5, laneW * 2.5],
+    currentLane: 1,
+    targetX: laneW * 1.5,
+    playerX: laneW * 1.5,
+    playerY: H * 0.70,
+    playerW: laneW * 0.42,
+    playerH: laneW * 0.42,
+    jumping: false,
+    sliding: false,
+    jumpY: 0,
+    jumpVel: 0,
+    score: 0,
+    lives: 3,
+    speed: 4,
+    obstacles: [],
+    coins: [],
+    particles: [],
+    bgOffset: 0,
+    frameCount: 0,
+    invincible: 0,
+    lastObstacle: 0,
+    lastCoin: 0,
+    alive: true,
+    slideTimer: 0,
+  };
+  myScore = 0;
+  myLives = 3;
+  updateHUD();
+}
+
+function gameLoop() {
+  if (!gameRunning) return;
+  animFrame = requestAnimationFrame(gameLoop);
+  const gs = gameState;
+  if (!gs.alive) return;
+
+  gs.frameCount++;
+  gs.score++;
+  gs.speed = 4 + Math.floor(gs.score / 300) * 0.5;
+
+  // Smooth lane move
+  gs.playerX += (gs.targetX - gs.playerX) * 0.18;
+
+  // Jump physics
+  if (gs.jumping) {
+    gs.jumpVel += 0.7;
+    gs.jumpY += gs.jumpVel;
+    if (gs.jumpY >= 0) { gs.jumpY = 0; gs.jumping = false; gs.jumpVel = 0; }
+  }
+
+  // Slide timer
+  if (gs.sliding) {
+    gs.slideTimer--;
+    if (gs.slideTimer <= 0) gs.sliding = false;
+  }
+
+  // Background scroll
+  gs.bgOffset = (gs.bgOffset + gs.speed) % 60;
+
+  // Spawn obstacles
+  if (gs.frameCount - gs.lastObstacle > Math.max(55, 100 - gs.score/100)) {
+    spawnObstacle();
+    gs.lastObstacle = gs.frameCount;
+  }
+
+  // Spawn coins
+  if (gs.frameCount - gs.lastCoin > 35) {
+    spawnCoin();
+    gs.lastCoin = gs.frameCount;
+  }
+
+  // Update obstacles
+  gs.obstacles = gs.obstacles.filter(o => {
+    o.y += gs.speed;
+    return o.y < gs.H + 80;
+  });
+
+  // Update coins
+  gs.coins = gs.coins.filter(c => {
+    c.y += gs.speed;
+    if (collidesCoin(c)) {
+      gs.score += 50;
+      spawnParticles(c.x, c.y, '#ffd700');
+      return false;
+    }
+    return c.y < gs.H + 40;
+  });
+
+  // Collision with obstacles
+  if (gs.invincible > 0) {
+    gs.invincible--;
+  } else {
+    for (const o of gs.obstacles) {
+      if (collidesObstacle(o)) {
+        gs.lives--;
+        gs.invincible = 90;
+        spawnParticles(gs.playerX, gs.playerY + gs.jumpY, var_hot());
+        if (gs.lives <= 0) {
+          endGame();
+          return;
+        }
+        updateHUD();
+        break;
+      }
+    }
+  }
+
+  // Particles
+  gs.particles = gs.particles.filter(p => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    p.vy += 0.1;
+    return p.life > 0;
+  });
+
+  myScore = gs.score;
+  myLives = gs.lives;
+  document.getElementById('scoreDisplay').textContent = gs.score;
+
+  draw();
+}
+
+function var_hot() { return '#ff3c6e'; }
+
+function spawnObstacle() {
+  const gs = gameState;
+  const type = Math.random() < 0.5 ? 'train' : 'barrier';
+  // Spawn 1 or 2 lanes blocked
+  const numLanes = Math.random() < 0.3 ? 2 : 1;
+  const laneIdx = Math.floor(Math.random() * 3);
+  const lanes = [laneIdx];
+  if (numLanes === 2) {
+    const other = (laneIdx + 1) % 3;
+    lanes.push(other);
+  }
+  for (const l of lanes) {
+    const isBarrier = type === 'barrier';
+    gs.obstacles.push({
+      lane: l,
+      x: gs.lanes[l],
+      y: -60,
+      w: gs.laneW * 0.55,
+      h: isBarrier ? gs.laneW * 0.28 : gs.laneW * 0.55,
+      type,
+      isLow: isBarrier,
+    });
+  }
+}
+
+function spawnCoin() {
+  const gs = gameState;
+  const l = Math.floor(Math.random() * 3);
+  for (let i = 0; i < 3; i++) {
+    gs.coins.push({ lane: l, x: gs.lanes[l], y: -40 - i * 35, r: 10 });
+  }
+}
+
+function collidesObstacle(o) {
+  const gs = gameState;
+  const px = gs.playerX, py = gs.playerY + gs.jumpY;
+  const ph = gs.sliding ? gs.playerH * 0.5 : gs.playerH;
+  const pyTop = py - ph;
+
+  const ox = o.x, oy = o.y;
+  const oh = o.h, ow = o.w;
+  const oyTop = oy - oh;
+
+  const xOk = Math.abs(px - ox) < (gs.playerW * 0.4 + ow * 0.4);
+  const yOk = pyTop < oy && py > oyTop;
+
+  // If it's a barrier and player is jumping high enough, skip
+  if (o.isLow && gs.jumping && gs.jumpY < -oh * 0.5) return false;
+  // If sliding under barrier
+  if (o.isLow && gs.sliding) return false;
+
+  return xOk && yOk;
+}
+
+function collidesCoin(c) {
+  const gs = gameState;
+  const px = gs.playerX, py = gs.playerY + gs.jumpY;
+  return Math.abs(px - c.x) < gs.laneW * 0.35 && Math.abs(py - c.y) < 30;
+}
+
+function spawnParticles(x, y, color) {
+  for (let i = 0; i < 12; i++) {
+    gameState.particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 5,
+      vy: (Math.random() - 0.7) * 5,
+      life: 30 + Math.random() * 20,
+      color,
+      r: 2 + Math.random() * 3,
+    });
+  }
+}
+
+// ---- DRAW ----
+function draw() {
+  const gs = gameState;
+  const { W, H, laneW } = gs;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background tracks
+  ctx.fillStyle = COLORS.track;
+  ctx.fillRect(0, 0, W, H);
+
+  // Lane lines (scrolling)
+  ctx.strokeStyle = '#1a1a2a';
+  ctx.lineWidth = 2;
+  for (let x = laneW; x < W; x += laneW) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+  }
+
+  // Scrolling road marks
+  ctx.strokeStyle = '#252535';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([20, 40]);
+  ctx.lineDashOffset = -gs.bgOffset;
+  for (let lx = 0; lx < 3; lx++) {
+    ctx.beginPath();
+    ctx.moveTo(gs.lanes[lx], 0);
+    ctx.lineTo(gs.lanes[lx], H);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Coins
+  for (const c of gs.coins) {
+    ctx.save();
+    ctx.fillStyle = COLORS.coin;
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Obstacles
+  for (const o of gs.obstacles) {
+    ctx.save();
+    if (o.type === 'train') {
+      ctx.fillStyle = COLORS.obstacle_train;
+      ctx.shadowColor = '#ff3c6e';
+      ctx.shadowBlur = 15;
+      const x = o.x - o.w / 2, y = o.y - o.h;
+      ctx.fillRect(x, y, o.w, o.h);
+      // Windows
+      ctx.fillStyle = '#ff8888';
+      ctx.fillRect(x + 5, y + 5, o.w - 10, o.h * 0.3);
+    } else {
+      ctx.fillStyle = COLORS.obstacle_barrier;
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 10;
+      const x = o.x - o.w / 2, y = o.y - o.h;
+      ctx.fillRect(x, y, o.w, o.h);
+      // Stripe
+      ctx.fillStyle = '#ff3c6e';
+      ctx.fillRect(x, y + o.h * 0.3, o.w, o.h * 0.3);
+    }
+    ctx.restore();
+  }
+
+  // Particles
+  for (const p of gs.particles) {
+    ctx.save();
+    ctx.globalAlpha = p.life / 50;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Player
+  const px = gs.playerX, py = gs.playerY + gs.jumpY;
+  const ph = gs.sliding ? gs.playerH * 0.5 : gs.playerH;
+  const pw = gs.sliding ? gs.playerW * 1.3 : gs.playerW;
+  const slideOff = gs.sliding ? gs.playerH * 0.25 : 0;
+
+  ctx.save();
+  if (gs.invincible > 0 && Math.floor(gs.invincible / 5) % 2 === 0) {
+    ctx.globalAlpha = 0.4;
+  }
+  ctx.fillStyle = COLORS.player;
+  ctx.shadowColor = '#00ffcc';
+  ctx.shadowBlur = 20;
+
+  // Body
+  ctx.beginPath();
+  ctx.roundRect(px - pw/2, py - ph + slideOff, pw, ph, 8);
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#000';
+  if (!gs.sliding) {
+    ctx.beginPath();
+    ctx.arc(px - 6, py - ph*0.65, 4, 0, Math.PI*2);
+    ctx.arc(px + 6, py - ph*0.65, 4, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Ground line
+  ctx.fillStyle = COLORS.ground;
+  ctx.fillRect(0, H - 4, W, 4);
+}
+
+function updateHUD() {
+  const hearts = document.querySelectorAll('.heart');
+  hearts.forEach((h, i) => {
+    h.classList.toggle('lost', i >= myLives);
+  });
+}
+
+// ---- CONTROLS ----
+function bindControls() {
+  canvas.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    handleSwipe(dx, dy);
+  }, { passive: true });
+
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const W = canvas.width;
+    if (x < W / 3) moveLane(-1);
+    else if (x > W * 2/3) moveLane(1);
+    else doJump();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft')  moveLane(-1);
+    if (e.key === 'ArrowRight') moveLane(1);
+    if (e.key === 'ArrowUp')    doJump();
+    if (e.key === 'ArrowDown')  doSlide();
+  });
+}
+
+function handleSwipe(dx, dy) {
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx < -20) moveLane(-1);
+    else if (dx > 20) moveLane(1);
+  } else {
+    if (dy < -20) doJump();
+    else if (dy > 20) doSlide();
+  }
+}
+
+function moveLane(dir) {
+  const gs = gameState;
+  gs.currentLane = Math.max(0, Math.min(2, gs.currentLane + dir));
+  gs.targetX = gs.lanes[gs.currentLane];
+}
+
+function doJump() {
+  const gs = gameState;
+  if (!gs.jumping) {
+    gs.jumping = true;
+    gs.jumpVel = -14;
+  }
+}
+
+function doSlide() {
+  const gs = gameState;
+  if (!gs.sliding) {
+    gs.sliding = true;
+    gs.slideTimer = 45;
+  }
+}
+
+// ============================================================
+//  PUSH SCORE & POLL OTHERS
+// ============================================================
+async function pushScore() {
+  if (!myId || !myBatchId) return;
+  const pRes = await storageGet('player:' + myId);
+  if (!pRes) return;
+  const p = JSON.parse(pRes.value);
+  p.score = myScore;
+  p.lives = myLives;
+  p.alive = gameState.alive !== false;
+  p.finished = gameOver;
+  await storageSet('player:' + myId, JSON.stringify(p));
+
+  // Also update batch scores
+  const bRes = await storageGet('batch:' + myBatchId);
+  if (bRes) {
+    const b = JSON.parse(bRes.value);
+    b.scores[myId] = myScore;
+    await storageSet('batch:' + myBatchId, JSON.stringify(b));
+  }
+}
+
+async function pollBatchScores() {
+  if (!myBatchId) return;
+  const bRes = await storageGet('batch:' + myBatchId);
+  if (!bRes) return;
+  const batch = JSON.parse(bRes.value);
+  const aliveCount = Object.values(batch.scores).length;
+  document.getElementById('aliveCount').textContent = aliveCount;
+
+  // Check if game is over for all
+  if (batch.finished && gameRunning) {
+    endBatch(batch);
+  }
+}
+
+// ============================================================
+//  GAME OVER
+// ============================================================
+async function endGame() {
+  gameRunning = false;
+  gameOver    = true;
+  gameState.alive = false;
+  cancelAnimationFrame(animFrame);
+
+  await pushScore();
+
+  // Check if all players done
+  await checkAllDone();
+
+  document.getElementById('elimScore').textContent = myScore;
+  showScreen('eliminated-screen');
+
+  // Keep polling for batch finish
+  pollTimer = setInterval(async () => {
+    const bRes = await storageGet('batch:' + myBatchId);
+    if (!bRes) return;
+    const batch = JSON.parse(bRes.value);
+    if (batch.finished) {
+      clearInterval(pollTimer);
+      showFinalResults(batch);
+    }
+    // Update live scores on elim screen
+    updateElimBoard(batch);
+  }, 2000);
+}
+
+async function checkAllDone() {
+  const bRes = await storageGet('batch:' + myBatchId);
+  if (!bRes) return;
+  const batch = JSON.parse(bRes.value);
+
+  let allDone = true;
+  for (const pid of batch.players) {
+    const pRes = await storageGet('player:' + pid);
+    if (!pRes) continue;
+    const p = JSON.parse(pRes.value);
+    if (!p.finished && p.alive) { allDone = false; break; }
+  }
+
+  if (allDone) {
+    batch.finished = true;
+    await storageSet('batch:' + myBatchId, JSON.stringify(batch));
+  }
+}
+
+async function updateElimBoard(batch) {
+  const scores = [];
+  for (const pid of batch.players) {
+    const pRes = await storageGet('player:' + pid);
+    if (!pRes) continue;
+    const p = JSON.parse(pRes.value);
+    scores.push({ name: p.name, score: p.score, alive: p.alive });
+  }
+  scores.sort((a, b) => b.score - a.score);
+  const el = document.getElementById('elimLeaderboard');
+  el.innerHTML = '<div style="font-size:0.6rem;letter-spacing:0.2em;color:#445;text-transform:uppercase;margin-bottom:8px">Live Scores</div>' +
+    scores.map((s, i) => `
+      <div style="display:flex;justify-content:space-between;padding:8px 12px;background:#12121a;border-radius:6px;margin-bottom:4px;font-size:0.8rem">
+        <span style="color:${s.alive ? 'var(--neon)' : '#445'}">${s.name}</span>
+        <span style="font-family:'Bebas Neue';font-size:1rem;color:var(--gold)">${s.score}</span>
+      </div>
+    `).join('');
+}
+
+async function showFinalResults(batch) {
+  const scores = [];
+  for (const pid of batch.players) {
+    const pRes = await storageGet('player:' + pid);
+    if (!pRes) continue;
+    const p = JSON.parse(pRes.value);
+    scores.push({ name: p.name, score: p.score, isMe: pid === myId });
+  }
+  scores.sort((a, b) => b.score - a.score);
+
+  const isWinner = scores[0].isMe;
+
+  if (isWinner) {
+    document.getElementById('winnerNameDisplay').textContent = scores[0].name;
+    showScreen('winner-screen');
+    launchConfetti();
+  } else {
+    buildLeaderboard(scores);
+    showScreen('leaderboard');
+  }
+}
+
+function endBatch(batch) {
+  if (!gameRunning) return;
+  gameRunning = false;
+  gameOver = true;
+  cancelAnimationFrame(animFrame);
+  showFinalResults(batch);
+}
+
+// ============================================================
+//  LEADERBOARD
+// ============================================================
+function buildLeaderboard(scores) {
+  const medals = ['🥇','🥈','🥉'];
+  const lbEl = document.getElementById('lbList');
+  lbEl.innerHTML = scores.map((s, i) => `
+    <div class="lb-row">
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      <div class="lb-name">${s.name} ${s.isMe ? '<span style="color:#445;font-size:0.6rem">(you)</span>' : ''}</div>
+      <div class="lb-score">${s.score}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+//  WINNER PHONE SUBMIT
+// ============================================================
+function submitPhone() {
+  const phone = document.getElementById('phoneInput').value.trim();
+  if (!phone) { alert('Please enter your phone number!'); return; }
+  // Store the phone + winner name
+  storageSet('winner_claim:' + Date.now(), JSON.stringify({ name: myName, phone, batch: myBatchId, score: myScore, time: new Date().toISOString() }));
+  document.getElementById('sentMsg').style.display = 'block';
+  document.querySelector('.btn-submit').disabled = true;
+  document.querySelector('.btn-submit').style.opacity = '0.5';
+}
+
+// ============================================================
+//  CONFETTI
+// ============================================================
+function launchConfetti() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.style.cssText = `
+      position:absolute;
+      width:${4+Math.random()*6}px;
+      height:${4+Math.random()*6}px;
+      background:${['#ffd700','#00ffcc','#ff3c6e','#fff','#ff9500'][Math.floor(Math.random()*5)]};
+      left:${Math.random()*100}%;
+      bottom:-10px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation:float ${3+Math.random()*4}s ${Math.random()*2}s linear infinite;
+    `;
+    container.appendChild(p);
+  }
+}
+
+// ============================================================
+//  SCREEN MANAGEMENT
+// ============================================================
+function showScreen(id) {
+  const screens = ['lobby','waiting','game-screen','leaderboard','winner-screen','eliminated-screen'];
+  screens.forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = (s === id) ? 'flex' : 'none';
+  });
+}
+
+// ============================================================
+//  AMBIENT PARTICLES
+// ============================================================
+(function initParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (6 + Math.random() * 10) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+    if (Math.random() > 0.5) p.style.background = '#ff3c6e';
+    container.appendChild(p);
+  }
+})();
+
+// ============================================================
+//  INIT
+// ============================================================
+showScreen('lobby');
+document.getElementById('playerName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinGame();
+});
+</script>
+</body>
+</html>
