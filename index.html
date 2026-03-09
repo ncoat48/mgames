@@ -7,6 +7,13 @@
   <title>METRO DASH — Multiplayer Runner</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function () {
+      // REPLACE 'YOUR_PUBLIC_KEY' with the key from your EmailJS Account tab
+      emailjs.init("T5N9JJQ6FdUG19zYv");
+    })();
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
 
@@ -972,11 +979,48 @@
       // ---- SUBMIT PHONE ----
       async function submitPhone() {
         const phone = document.getElementById('phoneInput').value.trim();
-        if (!phone) { toast('Enter your phone number!'); return; }
-        await db.ref('winner_claims').push({ name: myName, phone, batch: myBatchId, score: myScore, time: new Date().toISOString() });
-        document.getElementById('sentMsg').style.display = 'block';
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').style.opacity = '.5';
+        const btn = document.getElementById('submitBtn');
+        const sentMsg = document.getElementById('sentMsg');
+
+        if (!phone) {
+          toast('Enter your phone number!');
+          return;
+        }
+
+        // 1. Existing Firebase Save (Good for backup)
+        await db.ref('winner_claims').push({
+          name: myName,
+          phone,
+          batch: myBatchId,
+          score: myScore,
+          time: new Date().toISOString()
+        });
+
+        // 2. NEW: Send Email via EmailJS
+        const templateParams = {
+          name: myName,
+          phone: phone,
+          score: myScore,
+          batch: myBatchId
+        };
+
+        // Disable button immediately to prevent double-clicks
+        btn.disabled = true;
+        btn.style.opacity = '.5';
+        btn.textContent = "SENDING...";
+
+        emailjs.send('service_xd6pzog', 'template_4v41dgg', templateParams)
+          .then(function (response) {
+            console.log('SUCCESS!', response.status, response.text);
+            sentMsg.style.display = 'block';
+            btn.style.display = 'none'; // Hide button on success
+          }, function (error) {
+            console.log('FAILED...', error);
+            toast('Email failed, but data was saved to database.');
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.textContent = "SEND MY NUMBER";
+          });
       }
       window.submitPhone = submitPhone;
 
