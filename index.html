@@ -10,7 +10,6 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script type="text/javascript">
     (function () {
-      // REPLACE 'YOUR_PUBLIC_KEY' with the key from your EmailJS Account tab
       emailjs.init("T5N9JJQ6FdUG19zYv");
     })();
   </script>
@@ -479,9 +478,27 @@
       font-size: clamp(2rem, 8vw, 4rem);
       color: var(--neon);
       text-shadow: 0 0 20px #00ffcc66;
-      margin-bottom: 30px
+      margin-bottom: 8px
     }
 
+    .winner-score-badge {
+      font-size: .6rem;
+      letter-spacing: .2em;
+      color: #556;
+      text-transform: uppercase;
+      margin-bottom: 26px
+    }
+
+    .winner-score-badge span {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      color: var(--neon);
+      display: block;
+      margin-top: 2px;
+      text-shadow: 0 0 10px #00ffcc55
+    }
+
+    /* UNLOCKED reward box */
     .reload-box {
       background: var(--panel);
       border: 1px solid var(--gold);
@@ -526,6 +543,92 @@
       padding: 10px;
       text-align: center;
       letter-spacing: .1em
+    }
+
+    /* LOCKED reward box — score not reached */
+    .score-gate-locked {
+      background: var(--panel);
+      border: 1px solid #ff3c6e33;
+      border-radius: 14px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center
+    }
+
+    .score-gate-locked .lock-icon {
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+      filter: grayscale(1);
+      opacity: .6
+    }
+
+    .score-gate-locked .lock-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: var(--hot);
+      letter-spacing: .12em;
+      margin-bottom: 10px
+    }
+
+    .score-gate-locked .lock-msg {
+      font-size: .66rem;
+      letter-spacing: .15em;
+      color: #556;
+      text-transform: uppercase;
+      line-height: 2
+    }
+
+    .score-gate-locked .lock-threshold {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      color: var(--gold);
+      text-shadow: 0 0 15px #ffd70044;
+      display: block;
+      margin: 6px 0 2px
+    }
+
+    .score-gate-locked .lock-your-score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      color: var(--hot);
+      display: block;
+      margin-top: 6px
+    }
+
+    /* SETUP SCREEN */
+    #setup {
+      background: radial-gradient(ellipse at 50% 0%, #0d2b2b 0%, #0a0a0f 70%)
+    }
+
+    .setup-card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 100%;
+      font-size: .78rem;
+      line-height: 2;
+      color: #aab
+    }
+
+    .setup-card a {
+      color: var(--gold)
+    }
+
+    .setup-card code {
+      background: #0a0a0f;
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--hot);
+      font-family: 'Space Mono', monospace;
+      font-size: .75rem
+    }
+
+    .step-num {
+      color: var(--neon);
+      font-weight: 700
     }
 
     .particles {
@@ -585,41 +688,6 @@
       text-align: center;
       max-width: 320px
     }
-
-    /* SETUP SCREEN */
-    #setup {
-      background: radial-gradient(ellipse at 50% 0%, #0d2b2b 0%, #0a0a0f 70%)
-    }
-
-    .setup-card {
-      background: #12121a;
-      border: 1px solid #1e1e2e;
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 500px;
-      width: 100%;
-      font-size: .78rem;
-      line-height: 2;
-      color: #aab
-    }
-
-    .setup-card a {
-      color: var(--gold)
-    }
-
-    .setup-card code {
-      background: #0a0a0f;
-      padding: 2px 7px;
-      border-radius: 4px;
-      color: var(--hot);
-      font-family: 'Space Mono', monospace;
-      font-size: .75rem
-    }
-
-    .step-num {
-      color: var(--neon);
-      font-weight: 700
-    }
   </style>
 </head>
 
@@ -627,7 +695,7 @@
   <div class="particles" id="particles"></div>
   <div id="toast"></div>
 
-  <!-- SETUP GUIDE (shown when config not replaced) -->
+  <!-- SETUP GUIDE -->
   <div class="screen" id="setup">
     <div style="text-align:left;max-width:520px;width:100%;padding:0 8px">
       <h1 style="font-family:'Bebas Neue';font-size:3rem;color:var(--neon);margin-bottom:2px">METRO DASH</h1>
@@ -723,19 +791,39 @@
     <div class="crown">👑</div>
     <h2>WINNER!</h2>
     <div class="winner-name" id="winnerNameDisplay"></div>
-    <div class="reload-box">
+    <div class="winner-score-badge">
+      Your Final Score
+      <span id="winnerScoreDisplay">0</span>
+    </div>
+
+    <!-- UNLOCKED: score >= 10000 -->
+    <div class="reload-box" id="rewardUnlocked" style="display:none">
       <p>🎉 Claim Your Free Reload 🎉</p>
       <input type="tel" id="phoneInput" placeholder="e.g. 0771234567" maxlength="15">
       <button class="btn btn-gold" id="submitBtn" onclick="submitPhone()">SEND MY NUMBER</button>
       <div class="sent-msg" id="sentMsg">✅ Number sent! Your reload is on the way 🚀</div>
+    </div>
+
+    <!-- LOCKED: score < 10000 -->
+    <div class="score-gate-locked" id="rewardLocked" style="display:none">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">Reward Locked</div>
+      <div class="lock-msg">
+        You need to score at least
+        <span class="lock-threshold">10,000</span>
+        to claim your free reload.
+        <br>
+        Your score:
+        <span class="lock-your-score" id="lockedScoreDisplay">0</span>
+        <br><br>
+        You won, but you'll need to hit<br>10K next time to claim the prize!
+      </div>
     </div>
   </div>
 
   <script>
     // ============================================================
     //  FIREBASE CONFIG
-    //  Replace this entire object with YOUR firebaseConfig from
-    //  Firebase Console → Project Settings → Your Apps → Web
     // ============================================================
     /* PASTE YOUR FIREBASE CONFIG HERE */
     const firebaseConfig = {
@@ -748,6 +836,8 @@
       appId: "1:527281937367:web:2ac42502fdfb417888c992"
     };
     // ============================================================
+
+    const REWARD_SCORE_THRESHOLD = 10000; // Must score at least this to claim reward
 
     const IS_PLACEHOLDER = firebaseConfig.apiKey === "REPLACE_ME";
 
@@ -951,7 +1041,6 @@
         await pushScore();
         document.getElementById('elimScore').textContent = myScore;
         showScreen('eliminated-screen');
-        // Check if all done
         const snap = await batchRef.once('value');
         const b = snap.val(); const ps = b.players || {};
         if (Object.values(ps).every(p => !p.alive || p.finished)) await batchRef.update({ finished: true });
@@ -967,8 +1056,26 @@
 
       function showResults(players) {
         const rows = Object.entries(players).map(([pid, p]) => ({ ...p, isMe: pid === myId })).sort((a, b) => b.score - a.score);
-        if (rows[0].isMe) { document.getElementById('winnerNameDisplay').textContent = rows[0].name; showScreen('winner-screen'); confetti(); }
-        else { buildLB(rows); showScreen('leaderboard'); }
+        if (rows[0].isMe) {
+          document.getElementById('winnerNameDisplay').textContent = rows[0].name;
+          document.getElementById('winnerScoreDisplay').textContent = myScore.toLocaleString();
+
+          // --- SCORE GATE: only show claim form if score >= threshold ---
+          if (myScore >= REWARD_SCORE_THRESHOLD) {
+            document.getElementById('rewardUnlocked').style.display = 'block';
+            document.getElementById('rewardLocked').style.display = 'none';
+          } else {
+            document.getElementById('rewardLocked').style.display = 'block';
+            document.getElementById('rewardUnlocked').style.display = 'none';
+            document.getElementById('lockedScoreDisplay').textContent = myScore.toLocaleString();
+          }
+
+          showScreen('winner-screen');
+          confetti();
+        } else {
+          buildLB(rows);
+          showScreen('leaderboard');
+        }
       }
 
       function buildLB(rows) {
@@ -976,18 +1083,20 @@
         document.getElementById('lbList').innerHTML = rows.map((p, i) => `<div class="lb-row"><div class="lb-rank">${m[i] || (i + 1)}</div><div class="lb-name">${p.name}${p.isMe ? ' <span style="color:#445;font-size:.6rem">(you)</span>' : ''}</div><div class="lb-score">${p.score}</div></div>`).join('');
       }
 
-      // ---- SUBMIT PHONE ----
+      // ---- SUBMIT PHONE (only reachable if score >= threshold) ----
       async function submitPhone() {
         const phone = document.getElementById('phoneInput').value.trim();
         const btn = document.getElementById('submitBtn');
         const sentMsg = document.getElementById('sentMsg');
 
-        if (!phone) {
-          toast('Enter your phone number!');
+        if (!phone) { toast('Enter your phone number!'); return; }
+
+        // Double-check score gate on the client side
+        if (myScore < REWARD_SCORE_THRESHOLD) {
+          toast('Score too low to claim reward!');
           return;
         }
 
-        // 1. Existing Firebase Save (Good for backup)
         await db.ref('winner_claims').push({
           name: myName,
           phone,
@@ -996,7 +1105,6 @@
           time: new Date().toISOString()
         });
 
-        // 2. NEW: Send Email via EmailJS
         const templateParams = {
           name: myName,
           phone: phone,
@@ -1004,7 +1112,6 @@
           batch: myBatchId
         };
 
-        // Disable button immediately to prevent double-clicks
         btn.disabled = true;
         btn.style.opacity = '.5';
         btn.textContent = "SENDING...";
@@ -1013,7 +1120,7 @@
           .then(function (response) {
             console.log('SUCCESS!', response.status, response.text);
             sentMsg.style.display = 'block';
-            btn.style.display = 'none'; // Hide button on success
+            btn.style.display = 'none';
           }, function (error) {
             console.log('FAILED...', error);
             toast('Email failed, but data was saved to database.');
