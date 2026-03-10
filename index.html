@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>METRO DASH — Multiplayer Runner</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>emailjs.init("T5N9JJQ6FdUG19zYv");</script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Speed flash keyframe (injected inline — tiny, keeps game.js clean) -->
+  <style>
+    @keyframes speedFlash {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(.6); }
+      30%  { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+      70%  { opacity: 1; transform: translate(-50%,-50%) scale(1);   }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(.9); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ─── AMBIENT LAYER ─────────────────────────────────────────── -->
+  <div class="particles" id="particles"></div>
+  <div id="toast"></div>
+
+  <!-- ─── SETUP GUIDE ──────────────────────────────────────────── -->
+  <div class="screen" id="setup">
+    <div class="setup-inner">
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--neon);margin-bottom:2px">METRO DASH</h1>
+      <div style="font-size:.62rem;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:18px">
+        ⚙️ One-Time Firebase Setup (Free)
+      </div>
+      <div class="setup-card">
+        <div><span class="step-num">Step 1</span> — Go to
+          <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>
+          and create a new project.</div>
+        <div><span class="step-num">Step 2</span> — Click
+          <b style="color:#eef">Build → Realtime Database → Create database</b>
+          → pick any region → start in <b style="color:#eef">test mode</b>.</div>
+        <div><span class="step-num">Step 3</span> — Go to
+          <b style="color:#eef">Project Settings (⚙️) → General → Your apps → Add app → Web</b>.</div>
+        <div><span class="step-num">Step 4</span> — Copy the <code>firebaseConfig</code> object shown.</div>
+        <div><span class="step-num">Step 5</span> — Open <code>game.js</code> and find:<br>
+          <code>/* PASTE YOUR FIREBASE CONFIG HERE */</code><br>
+          Replace the placeholder config below it with yours.</div>
+        <div><span class="step-num">Step 6</span> — Save and deploy to
+          <a href="https://vercel.com" target="_blank">Vercel</a> ✅</div>
+      </div>
+      <div style="margin-top:12px;font-size:.6rem;color:#334;letter-spacing:.1em">
+        Firebase free Spark plan supports ~100,000 connections/day.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── LOBBY ─────────────────────────────────────────────────── -->
+  <div class="screen" id="lobby">
+    <h1>METRO<br>DASH</h1>
+    <div class="tagline">Multiplayer · 3–5 Players Per Batch</div>
+    <div class="card">
+      <label for="playerName">Enter Your Name</label>
+      <input
+        type="text"
+        id="playerName"
+        placeholder="YOUR NAME"
+        maxlength="16"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+      >
+      <button class="btn btn-neon" onclick="joinGame()">JOIN GAME</button>
+    </div>
+  </div>
+
+  <!-- ─── WAITING ROOM ──────────────────────────────────────────── -->
+  <div class="screen" id="waiting">
+    <h2>WAITING ROOM</h2>
+    <div class="batch-info" id="batchInfo">BATCH · 0 / 3 MIN PLAYERS</div>
+
+    <div class="player-list" id="playerListEl">
+      <div class="wait-msg">Waiting for players to join…</div>
+    </div>
+
+    <div class="cnt-bar" id="cntBar">
+      <div class="cnt-fill" id="cntFill" style="width:100%"></div>
+    </div>
+    <div class="cnt-text" id="cntText"></div>
+
+    <div class="wait-msg" id="waitMsg">Need at least 3 players to start</div>
+  </div>
+
+  <!-- ─── GAME ──────────────────────────────────────────────────── -->
+  <div class="screen" id="game-screen">
+
+    <!-- HUD -->
+    <div class="game-header">
+      <div class="hud-cell">
+        <div class="score-lbl">Score</div>
+        <div class="score-val" id="scoreDisplay">0</div>
+      </div>
+      <div class="hud-cell">
+        <div class="score-lbl">Lives</div>
+        <div class="hearts" id="livesDisplay">
+          <span class="heart">❤️</span>
+          <span class="heart">❤️</span>
+          <span class="heart">❤️</span>
+        </div>
+      </div>
+      <div class="hud-cell">
+        <div class="score-lbl">Alive</div>
+        <div id="aliveCount">?</div>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Swipe hint (desktop) -->
+    <div class="swipe-hint">← SWIPE · UP: JUMP · DOWN: SLIDE →</div>
+
+    <!-- Mobile buttons (shown only on touch devices via CSS) -->
+    <div class="mobile-controls" id="mobileControls">
+      <div class="ctrl-row">
+        <button class="ctrl-btn" id="ctrlLeft">◀ LEFT</button>
+        <button class="ctrl-btn" id="ctrlJump">▲ JUMP</button>
+        <button class="ctrl-btn" id="ctrlRight">RIGHT ▶</button>
+      </div>
+      <div class="ctrl-row">
+        <button class="ctrl-btn" id="ctrlSlide" style="flex:1">▼ SLIDE</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── ELIMINATED ────────────────────────────────────────────── -->
+  <div class="screen" id="eliminated-screen">
+    <div class="skull">💀</div>
+    <h2>ELIMINATED</h2>
+    <p class="text-dim mt-sm" style="font-size:.72rem;letter-spacing:.15em;text-transform:uppercase">
+      Better luck next time
+    </p>
+    <div class="score-lbl mt-md">Your Score</div>
+    <div class="score-final" id="elimScore">0</div>
+    <div class="mt-sm" style="font-size:.6rem;letter-spacing:.15em;color:#334;text-transform:uppercase">
+      Watching live results…
+    </div>
+    <div class="elim-lb" id="elimLeaderboard"></div>
+  </div>
+
+  <!-- ─── LEADERBOARD ───────────────────────────────────────────── -->
+  <div class="screen" id="leaderboard">
+    <h2>FINAL RESULTS</h2>
+    <div class="lb-sub">Batch Complete</div>
+    <div class="lb-list" id="lbList"></div>
+  </div>
+
+  <!-- ─── WINNER ────────────────────────────────────────────────── -->
+  <div class="screen" id="winner-screen">
+    <div class="crown">👑</div>
+    <h2>WINNER!</h2>
+    <div class="winner-name" id="winnerNameDisplay"></div>
+    <div class="winner-score-badge">
+      Your Final Score
+      <span id="winnerScoreDisplay">0</span>
+    </div>
+
+    <!-- UNLOCKED: score >= threshold -->
+    <div class="reload-box" id="rewardUnlocked" style="display:none">
+      <p>🎉 Claim Your Free Reload 🎉</p>
+      <input
+        type="tel"
+        id="phoneInput"
+        placeholder="e.g. 0771234567"
+        maxlength="15"
+      >
+      <button class="btn btn-gold" id="submitBtn" onclick="submitPhone()">
+        SEND MY NUMBER
+      </button>
+      <div class="sent-msg" id="sentMsg">
+        ✅ Number sent! Your reload is on the way 🚀
+      </div>
+    </div>
+
+    <!-- LOCKED: score < threshold -->
+    <div class="score-gate-locked" id="rewardLocked" style="display:none">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">Reward Locked</div>
+      <div class="lock-msg">
+        You need at least
+        <span class="lock-threshold">10,000</span>
+        to claim your free reload.
+        <br>
+        Your score:
+        <span class="lock-your-score" id="lockedScoreDisplay">0</span>
+        <br><br>
+        You won — score 10K next time to claim the prize!
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SCRIPTS ───────────────────────────────────────────────── -->
+  <script src="game.js"></script>
+
+</body>
+</html>
